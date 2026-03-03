@@ -1,17 +1,22 @@
 # Registro de Cambios – Informe de Requerimientos
 
 ## v0.0 – Diciembre 2025
-- Entrega de planificación del pryecto final
+- Entrega planificación del proyecto final
 
 ## v1.0 – Enero 2026
 - Entrega parcial inicial
-- Impplementación
+- Implementación diagrama de casos de uso
+- Implementacion diagrama de clases
 
 ## v2.0 – Febrero 2026
-- Entrega parcial inicial
+- Entrega parcial
 - Corregidas referencias bibliográficas
-- Actualizado diagrama de clases
+- Corregidas requisitos funcionales
+- Corregidas requisitos no funcionales
+- Actualizado diagrama de casos de uso
 - Actualizado escenarios
+- Actualizado requisitos funcionales
+- Actualizado requisitos no funcionales
 ```
 
 ---
