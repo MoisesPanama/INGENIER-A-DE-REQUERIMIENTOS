@@ -28,7 +28,7 @@
 
 **Paso 2:** Descomprime el `.zip`
 
-**Paso 3:** En GitHub crea la carpeta nueva `v2.0-entrega-final/` y sube los archivos ahí
+**Paso 3:** En GitHub crea la carpeta nueva `v(X).(X)-entrega-(parcial/final)/` y sube los archivos ahí
 
 **Paso 4:** Commit con mensaje descriptivo:
 ```
