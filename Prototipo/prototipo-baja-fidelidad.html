@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Simulador Vial IA — Prototipo Baja Fidelidad</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{font-family:'Courier New',monospace;background:#ede9e3;color:#2c2c2c;min-height:100vh;}
+
+  .tool-bar{background:#1a1a1a;padding:8px 18px;display:flex;align-items:center;gap:5px;flex-wrap:wrap;position:sticky;top:0;z-index:999;}
+  .tool-label{color:#555;font-size:10px;margin-right:6px;white-space:nowrap;font-family:Arial,sans-serif;}
+  .tb{background:#333;color:#bbb;border:1px solid #555;padding:5px 10px;font-size:11px;cursor:pointer;font-family:'Courier New',monospace;}
+  .tb:hover,.tb.on{background:#777;color:#fff;}
+
+  .screen{display:none;max-width:860px;margin:28px auto;padding:0 18px 50px;}
+  .screen.active{display:block;}
+
+  .app-bar{background:#d8d4ce;border:2px solid #aaa;padding:10px 16px;display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;}
+  .app-bar-logo{font-size:14px;font-weight:bold;}
+  .app-bar-right{display:flex;align-items:center;gap:10px;font-size:12px;color:#666;}
+
+  .pg-title{font-size:20px;font-weight:bold;margin-bottom:4px;}
+  .pg-sub{font-size:12px;color:#888;margin-bottom:20px;}
+
+  .box{background:#fff;border:2px solid #aaa;margin-bottom:14px;}
+  .box-head{background:#e0dbd4;border-bottom:2px solid #aaa;padding:7px 14px;font-size:11px;text-transform:uppercase;letter-spacing:1px;color:#555;}
+  .box-body{padding:14px 16px;}
+
+  .wfi{width:100%;border:2px solid #aaa;background:#f7f7f5;padding:8px 12px;font-family:'Courier New',monospace;font-size:13px;margin-bottom:10px;color:#444;outline:none;}
+  .wfi:focus{border-color:#666;}
+  .wfi::placeholder{color:#bbb;font-style:italic;}
+
+  .btn{background:#444;color:#fff;border:2px solid #222;padding:9px 20px;font-family:'Courier New',monospace;font-size:13px;cursor:pointer;margin-right:8px;margin-bottom:6px;display:inline-block;}
+  .btn:hover{background:#222;}
+  .btn.sec{background:#fff;color:#555;border-color:#aaa;}
+  .btn.sec:hover{background:#eee;}
+  .btn.full{width:100%;text-align:center;display:block;margin-right:0;}
+  .btn.sm{padding:5px 12px;font-size:11px;}
+
+  .g2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+  .g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;}
+
+  .stat-box{background:#fff;border:2px solid #aaa;padding:14px;text-align:center;}
+  .stat-n{font-size:30px;font-weight:bold;}
+  .stat-l{font-size:11px;color:#888;margin-top:3px;}
+
+  .esc-card{border:2px solid #aaa;background:#fff;cursor:pointer;}
+  .esc-card:hover{border-color:#555;background:#f5f5f3;}
+  .esc-card.sel{border-color:#333;background:#ede9e3;}
+  .esc-img{height:80px;background:repeating-linear-gradient(45deg,#ddd,#ddd 4px,#e8e8e8 4px,#e8e8e8 12px);display:flex;align-items:center;justify-content:center;font-size:22px;border-bottom:2px solid #aaa;}
+  .esc-info{padding:10px;}
+  .esc-name{font-size:13px;font-weight:bold;margin-bottom:3px;}
+  .esc-desc{font-size:11px;color:#777;}
+
+  .diff-row{display:flex;gap:8px;margin-bottom:10px;}
+  .dchip{border:2px solid #aaa;padding:6px 14px;font-size:12px;cursor:pointer;font-family:'Courier New',monospace;}
+  .dchip.sel{background:#444;color:#fff;border-color:#222;}
+
+  .sim-view{border:3px solid #aaa;background:repeating-linear-gradient(0deg,#e2e2e2,#e2e2e2 1px,#ebebeb 1px,#ebebeb 36px);height:240px;position:relative;overflow:hidden;}
+  .sim-road{position:absolute;bottom:0;left:50%;transform:translateX(-50%);width:160px;height:100%;background:#ccc;border-left:3px dashed #aaa;border-right:3px dashed #aaa;}
+  .sim-car{position:absolute;bottom:28px;left:50%;transform:translateX(-50%);font-size:28px;filter:grayscale(1);}
+  .sim-chip{position:absolute;background:rgba(255,255,255,0.92);border:1px solid #ccc;padding:4px 8px;font-size:10px;}
+
+  .hud-row{display:flex;gap:8px;margin-top:8px;}
+  .hud-b{flex:1;border:2px solid #aaa;background:#fff;padding:8px;text-align:center;}
+  .hud-v{font-size:20px;font-weight:bold;display:block;}
+  .hud-l{font-size:10px;color:#888;text-transform:uppercase;}
+
+  .pbar-row{display:flex;align-items:center;gap:10px;margin-bottom:12px;}
+  .pbar-lbl{width:150px;font-size:12px;color:#666;}
+  .pbar-bg{flex:1;height:12px;background:#ddd;border:1px solid #ccc;}
+  .pbar-fill{height:100%;background:#666;}
+  .pbar-val{width:36px;text-align:right;font-size:12px;font-weight:bold;}
+
+  .wtable{width:100%;border-collapse:collapse;font-size:12px;}
+  .wtable th,.wtable td{border:1px solid #ccc;padding:7px 10px;text-align:left;}
+  .wtable th{background:#e0dbd4;font-weight:bold;}
+  .wtable tr:nth-child(even) td{background:#f9f9f7;}
+
+  .split{display:flex;gap:14px;}
+  .snav-item{border:2px solid #ccc;background:#fff;padding:8px 12px;margin-bottom:5px;font-size:12px;cursor:pointer;}
+  .snav-item:hover,.snav-item.on{background:#444;color:#fff;border-color:#222;}
+
+  .chip{display:inline-block;padding:2px 8px;font-size:10px;border:1px solid #aaa;font-family:'Courier New',monospace;}
+  .chip.ok{background:#e8f5e8;border-color:#aaccaa;color:#336633;}
+  .chip.warn{background:#fff8e0;border-color:#ccbb88;color:#664400;}
+  .chip.err{background:#fce8e8;border-color:#ccaaaa;color:#661111;}
+
+  .ctrl-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;max-width:160px;margin:12px auto 0;}
+  .ctrl-k{border:2px solid #aaa;background:#fff;padding:11px;text-align:center;font-size:15px;cursor:pointer;}
+  .ctrl-k:hover{background:#eee;}
+
+  .badge-row{display:flex;gap:10px;flex-wrap:wrap;}
+  .badge-item{border:2px solid #ccc;background:#fff;width:72px;height:72px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:10px;text-align:center;color:#666;padding:6px;}
+  .badge-item .bi{font-size:20px;margin-bottom:4px;}
+  .badge-item.locked{background:#f0f0f0;color:#bbb;}
+
+  .chart-wrap{border:2px solid #aaa;background:#fff;padding:10px;margin-bottom:14px;}
+  .wsel{width:100%;border:2px solid #aaa;background:#f7f7f5;padding:8px 12px;font-family:'Courier New',monospace;font-size:13px;margin-bottom:10px;}
+
+  .notif{display:flex;gap:10px;padding:10px 0;border-bottom:1px solid #e0e0e0;}
+  .notif:last-child{border-bottom:none;}
+  .notif-icon{font-size:18px;width:28px;flex-shrink:0;}
+  .notif-text{flex:1;font-size:12px;color:#555;line-height:1.6;}
+  .notif-time{font-size:10px;color:#aaa;}
+
+  .teoria-card{border:2px solid #aaa;background:#fff;padding:12px;margin-bottom:10px;}
+  .teoria-card h4{font-size:13px;margin-bottom:5px;}
+  .teoria-card p{font-size:11px;color:#777;line-height:1.6;}
+
+  .tab-row{display:flex;gap:0;border:2px solid #aaa;margin-bottom:16px;background:#fff;}
+  .tab-item{flex:1;text-align:center;padding:8px;font-size:12px;cursor:pointer;border-right:1px solid #ccc;}
+  .tab-item:last-child{border-right:none;}
+  .tab-item.on{background:#444;color:#fff;}
+
+  .onboard-icon{font-size:60px;margin-bottom:16px;text-align:center;}
+  .onboard-title{font-size:18px;font-weight:bold;margin-bottom:8px;text-align:center;}
+  .onboard-desc{font-size:13px;color:#777;line-height:1.7;margin-bottom:24px;text-align:center;}
+  .dots{display:flex;gap:6px;justify-content:center;margin-bottom:20px;}
+  .dot{width:10px;height:10px;border:2px solid #aaa;background:#fff;}
+  .dot.on{background:#555;}
+
+  .avatar-circle{width:60px;height:60px;border-radius:50%;background:#888;border:2px solid #aaa;display:flex;align-items:center;justify-content:center;color:#fff;font-size:18px;font-weight:bold;}
+
+  @media(max-width:600px){.g2,.g3{grid-template-columns:1fr;}.split{flex-direction:column;}}
+</style>
+</head>
+<body>
+
+<nav class="tool-bar">
+  <span class="tool-label">Baja Fidelidad · Simulador Vial IA · UTEQ</span>
+  <button class="tb on" onclick="ir('onboard')">Inicio</button>
+  <button class="tb" onclick="ir('login')">Login</button>
+  <button class="tb" onclick="ir('dashboard')">Dashboard</button>
+  <button class="tb" onclick="ir('teoria')">Teoría</button>
+  <button class="tb" onclick="ir('escenario')">Escenario</button>
+  <button class="tb" onclick="ir('practica')">Práctica</button>
+  <button class="tb" onclick="ir('resultado')">Resultado</button>
+  <button class="tb" onclick="ir('metricas')">Métricas</button>
+  <button class="tb" onclick="ir('perfil')">Perfil</button>
+  <button class="tb" onclick="ir('notif')">Notificaciones</button>
+  <button class="tb" onclick="ir('admin')">Admin</button>
+</nav>
+
+<!-- ONBOARDING -->
+<div id="screen-onboard" class="screen active">
+  <div style="max-width:440px;margin:0 auto;">
+    <div class="box">
+      <div class="box-body" style="padding:24px;">
+        <div class="dots"><div class="dot on"></div><div class="dot"></div><div class="dot"></div></div>
+        <div class="onboard-icon">🚗</div>
+        <div class="onboard-title">Aprende a conducir de forma segura</div>
+        <div class="onboard-desc">Practica en escenarios urbanos realistas, recibe retroalimentación con IA y mejora tu comportamiento vial sin riesgos.</div>
+        <button class="btn full" onclick="ir('login')">Comenzar →</button>
+        <button class="btn sec full" style="margin-top:8px;" onclick="ir('login')">Ya tengo una cuenta</button>
+      </div>
+    </div>
+    <div class="box">
+      <div class="box-body" style="display:flex;gap:12px;">
+        <div style="flex:1;text-align:center;"><div style="font-size:24px;margin-bottom:6px;">📍</div><div style="font-size:11px;color:#777;">Escenarios urbanos reales</div></div>
+        <div style="flex:1;text-align:center;"><div style="font-size:24px;margin-bottom:6px;">🤖</div><div style="font-size:11px;color:#777;">IA en tiempo real</div></div>
+        <div style="flex:1;text-align:center;"><div style="font-size:24px;margin-bottom:6px;">📊</div><div style="font-size:11px;color:#777;">Reportes de desempeño</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- LOGIN -->
+<div id="screen-login" class="screen">
+  <div style="max-width:400px;margin:0 auto;">
+    <div class="box">
+      <div class="box-head">Simulador Vial IA · UTEQ</div>
+      <div class="box-body" style="text-align:center;padding-top:20px;">
+        <div style="font-size:40px;margin-bottom:8px;">🚗</div>
+        <div style="font-size:15px;font-weight:bold;margin-bottom:4px;">Bienvenido de regreso</div>
+        <div style="font-size:11px;color:#888;margin-bottom:20px;">Ingresa tus datos para continuar</div>
+      </div>
+    </div>
+    <div class="box">
+      <div class="box-body">
+        <div style="font-size:11px;color:#888;margin-bottom:5px;">CORREO</div>
+        <input class="wfi" placeholder="usuario@uteq.edu.ec"/>
+        <div style="font-size:11px;color:#888;margin-bottom:5px;">CONTRASEÑA</div>
+        <input class="wfi" placeholder="••••••••"/>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+          <label style="font-size:11px;cursor:pointer;"><input type="checkbox" style="margin-right:4px;"> Recordarme</label>
+          <span style="font-size:11px;color:#666;cursor:pointer;text-decoration:underline;">¿Olvidaste tu contraseña?</span>
+        </div>
+        <button class="btn full" onclick="ir('dashboard')">Iniciar sesión</button>
+        <hr style="border:none;border-top:1px solid #ddd;margin:12px 0;">
+        <div style="text-align:center;font-size:11px;color:#888;">¿No tienes cuenta? <span style="text-decoration:underline;cursor:pointer;">Regístrate</span></div>
+      </div>
+    </div>
+    <div class="box"><div class="box-body" style="background:#fff8e0;border:1px dashed #ccbb88;font-size:11px;color:#664400;">⚠ Credenciales incorrectas. Verifica e intenta de nuevo.</div></div>
+  </div>
+</div>
+
+<!-- DASHBOARD -->
+<div id="screen-dashboard" class="screen">
+  <div class="app-bar">
+    <div class="app-bar-logo">🚗 Simulador Vial</div>
+    <div class="app-bar-right">
+      <span>👤 Carlos V.</span>
+      <button class="btn sm sec" onclick="ir('notif')">🔔</button>
+      <button class="btn sm sec" onclick="ir('perfil')">⚙</button>
+    </div>
+  </div>
+  <div class="pg-title">¡Hola, Carlos 👋</div>
+  <div class="pg-sub">Tu progreso de esta semana</div>
+  <div class="g3" style="margin-bottom:14px;">
+    <div class="stat-box"><span class="stat-n">12</span><div class="stat-l">Prácticas realizadas</div></div>
+    <div class="stat-box"><span class="stat-n">74%</span><div class="stat-l">Puntuación promedio</div></div>
+    <div class="stat-box"><span class="stat-n">3</span><div class="stat-l">Insignias obtenidas</div></div>
+  </div>
+  <div class="box" style="margin-bottom:14px;">
+    <div class="box-head">Tu nivel actual</div>
+    <div class="box-body">
+      <div style="display:flex;align-items:center;gap:14px;">
+        <div style="font-size:30px;">🥈</div>
+        <div style="flex:1;">
+          <div style="font-size:13px;font-weight:bold;margin-bottom:4px;">Nivel 2 — Conductor Básico</div>
+          <div class="pbar-bg" style="margin-bottom:4px;"><div class="pbar-fill" style="width:60%;"></div></div>
+          <div style="font-size:10px;color:#888;">360 / 600 XP para el siguiente nivel</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="g2" style="margin-bottom:14px;">
+    <div class="box">
+      <div class="box-head">Acciones rápidas</div>
+      <div class="box-body">
+        <button class="btn full" style="margin-bottom:8px;" onclick="ir('escenario')">▶ Nueva práctica</button>
+        <button class="btn sec full" style="margin-bottom:8px;" onclick="ir('teoria')">📖 Estudiar teoría</button>
+        <button class="btn sec full" onclick="ir('metricas')">📊 Ver métricas</button>
+      </div>
+    </div>
+    <div class="box">
+      <div class="box-head">Últimas prácticas</div>
+      <div class="box-body" style="padding:0;">
+        <table class="wtable">
+          <tr><th>Fecha</th><th>Escenario</th><th>Puntaje</th></tr>
+          <tr><td>20 Nov</td><td>Urbano</td><td>82%</td></tr>
+          <tr><td>18 Nov</td><td>Cruce</td><td>68%</td></tr>
+          <tr><td>15 Nov</td><td>Urbano</td><td>71%</td></tr>
+        </table>
+      </div>
+    </div>
+  </div>
+  <div class="box">
+    <div class="box-head">Consejo del día</div>
+    <div class="box-body" style="font-size:12px;color:#555;line-height:1.7;">
+      💡 <strong>Distancia de seguimiento:</strong> Mantén al menos 3 segundos de distancia con el vehículo de adelante. En lluvia, duplica esa distancia.
+    </div>
+  </div>
+</div>
+
+<!-- TEORÍA -->
+<div id="screen-teoria" class="screen">
+  <div class="app-bar">
+    <div class="app-bar-logo">📖 Teoría Vial</div>
+    <div class="app-bar-right"><button class="btn sm sec" onclick="ir('dashboard')">← Inicio</button></div>
+  </div>
+  <div class="pg-title">Centro de Conocimiento</div>
+  <div class="pg-sub">Repasa las normas antes de practicar</div>
+  <div class="tab-row">
+    <div class="tab-item on">Señales</div>
+    <div class="tab-item">Normativas</div>
+    <div class="tab-item">Infracciones</div>
+    <div class="tab-item">Quizzes</div>
+  </div>
+  <div class="g2" style="margin-bottom:14px;">
+    <div class="teoria-card"><div style="font-size:28px;margin-bottom:6px;">🛑</div><h4>Señal PARE</h4><p>Detención completa obligatoria antes de la línea. Verificar ambos lados antes de continuar.</p><button class="btn sm" style="margin-top:8px;">Ver detalle</button></div>
+    <div class="teoria-card"><div style="font-size:28px;margin-bottom:6px;">⚠</div><h4>Ceda el Paso</h4><p>Reducir velocidad y ceder preferencia a vehículos que circulan en la vía principal.</p><button class="btn sm" style="margin-top:8px;">Ver detalle</button></div>
+    <div class="teoria-card"><div style="font-size:28px;margin-bottom:6px;">🚸</div><h4>Zona Escolar</h4><p>Velocidad máxima 25 km/h. Mayor precaución con peatones, especialmente niños.</p><button class="btn sm" style="margin-top:8px;">Ver detalle</button></div>
+    <div class="teoria-card"><div style="font-size:28px;margin-bottom:6px;">🔄</div><h4>Rotonda</h4><p>Prioridad para quienes circulan dentro. Ingresar solo cuando haya espacio libre.</p><button class="btn sm" style="margin-top:8px;">Ver detalle</button></div>
+  </div>
+  <div class="box">
+    <div class="box-head">Quiz rápido</div>
+    <div class="box-body">
+      <div style="font-size:13px;margin-bottom:10px;">¿Qué indica una señal octagonal roja con la palabra "PARE"?</div>
+      <button class="btn sec full" style="margin-bottom:6px;text-align:left;">A) Reducir velocidad a 30 km/h</button>
+      <button class="btn sec full" style="margin-bottom:6px;text-align:left;background:#e8f5e8;border-color:#aaccaa;">B) Detenerse completamente ✓</button>
+      <button class="btn sec full" style="text-align:left;">C) Ceder paso a la derecha</button>
+    </div>
+  </div>
+</div>
+
+<!-- ESCENARIO -->
+<div id="screen-escenario" class="screen">
+  <div class="app-bar">
+    <div class="app-bar-logo">🗺 Seleccionar Escenario</div>
+    <div class="app-bar-right"><button class="btn sm sec" onclick="ir('dashboard')">← Volver</button></div>
+  </div>
+  <div class="pg-title">Nueva Práctica</div>
+  <div class="pg-sub">Elige el entorno y el nivel de dificultad</div>
+  <div class="box" style="margin-bottom:14px;">
+    <div class="box-head">Nivel de dificultad</div>
+    <div class="box-body">
+      <div class="diff-row">
+        <div class="dchip sel">🟢 Básico</div>
+        <div class="dchip">🟡 Intermedio</div>
+        <div class="dchip">🔴 Avanzado</div>
+      </div>
+      <div style="font-size:10px;color:#aaa;">Velocidades bajas · señales simples · tráfico reducido</div>
+    </div>
+  </div>
+  <div class="box" style="margin-bottom:14px;">
+    <div class="box-head">Escenarios disponibles</div>
+    <div class="box-body">
+      <div class="g3">
+        <div class="esc-card sel"><div class="esc-img">🏙</div><div class="esc-info"><div class="esc-name">Zona Urbana</div><div class="esc-desc">Semáforos, peatones, intersecciones</div><div style="margin-top:6px;"><span class="chip ok">Seleccionado</span></div></div></div>
+        <div class="esc-card"><div class="esc-img">🛣</div><div class="esc-info"><div class="esc-name">Autopista</div><div class="esc-desc">Alta velocidad, cambios de carril</div></div></div>
+        <div class="esc-card"><div class="esc-img">🌧</div><div class="esc-info"><div class="esc-name">Lluvia y niebla</div><div class="esc-desc">Visibilidad reducida, piso mojado</div></div></div>
+        <div class="esc-card"><div class="esc-img">🌙</div><div class="esc-info"><div class="esc-name">Conducción nocturna</div><div class="esc-desc">Luz artificial, señales nocturnas</div></div></div>
+        <div class="esc-card"><div class="esc-img">🚦</div><div class="esc-info"><div class="esc-name">Centro de ciudad</div><div class="esc-desc">Alta densidad, peatones frecuentes</div></div></div>
+        <div class="esc-card" style="opacity:.5;cursor:not-allowed;"><div class="esc-img">🔒</div><div class="esc-info"><div class="esc-name">Montaña</div><div class="esc-desc">Disponible en Intermedio</div></div></div>
+      </div>
+    </div>
+  </div>
+  <div style="display:flex;justify-content:flex-end;gap:10px;">
+    <button class="btn sec" onclick="ir('dashboard')">Cancelar</button>
+    <button class="btn" onclick="ir('practica')">Iniciar práctica →</button>
+  </div>
+</div>
+
+<!-- PRÁCTICA -->
+<div id="screen-practica" class="screen">
+  <div class="app-bar">
+    <div class="app-bar-logo">🚗 Práctica activa</div>
+    <div class="app-bar-right">
+      <span style="font-size:11px;color:#e08;">● EN VIVO</span>
+      <button class="btn sm sec">⏸ Pausar</button>
+      <button class="btn sm" onclick="ir('resultado')">⏹ Finalizar</button>
+    </div>
+  </div>
+  <div style="display:flex;gap:14px;flex-wrap:wrap;">
+    <div style="flex:1;min-width:280px;">
+      <div class="box">
+        <div class="box-head">Zona Urbana · Básico</div>
+        <div class="box-body" style="padding:0;">
+          <div class="sim-view">
+            <div class="sim-road"></div>
+            <div class="sim-car">🚗</div>
+            <div class="sim-chip" style="top:10px;left:10px;">⏱ 02:34</div>
+            <div class="sim-chip" style="top:10px;right:10px;">🚦 ROJO — detener</div>
+            <div style="position:absolute;bottom:80px;left:30%;font-size:18px;">🚶</div>
+            <div style="position:absolute;top:60px;right:25%;font-size:16px;">🚕</div>
+          </div>
+        </div>
+      </div>
+      <div class="hud-row">
+        <div class="hud-b"><span class="hud-v">42</span><span class="hud-l">km/h</span></div>
+        <div class="hud-b"><span class="hud-v">0</span><span class="hud-l">Infracciones</span></div>
+        <div class="hud-b"><span class="hud-v">88%</span><span class="hud-l">Puntaje</span></div>
+        <div class="hud-b"><span class="hud-v">02:34</span><span class="hud-l">Tiempo</span></div>
+      </div>
+      <div style="text-align:center;margin-top:12px;">
+        <div style="font-size:10px;color:#aaa;margin-bottom:6px;text-transform:uppercase;letter-spacing:1px;">Controles</div>
+        <div class="ctrl-grid">
+          <div></div><div class="ctrl-k">▲</div><div></div>
+          <div class="ctrl-k">◄</div><div class="ctrl-k" style="font-size:10px;">FRENO</div><div class="ctrl-k">►</div>
+          <div></div><div class="ctrl-k">▼</div><div></div>
+        </div>
+      </div>
+    </div>
+    <div style="width:220px;flex-shrink:0;">
+      <div class="box"><div class="box-head">Análisis IA</div><div class="box-body" style="font-size:12px;line-height:2.1;">✅ Velocidad correcta<br>✅ Señal respetada<br>⚠️ Peatón cercano<br>🔵 Semáforo en rojo</div></div>
+      <div class="box">
+        <div class="box-head">Mini-mapa</div>
+        <div class="box-body" style="background:repeating-linear-gradient(0deg,#f0f0f0,#f0f0f0 1px,#f8f8f8 1px,#f8f8f8 16px);height:90px;position:relative;">
+          <div style="position:absolute;top:50%;left:50%;font-size:14px;transform:translate(-50%,-50%);">📍</div>
+        </div>
+      </div>
+      <div class="box"><div class="box-head">Eventos recientes</div><div class="box-body" style="font-size:11px;color:#555;line-height:2.1;">02:10 — Cruce respetado<br>01:45 — Velocidad ok<br>01:20 — Señal PARE ok</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- RESULTADO -->
+<div id="screen-resultado" class="screen">
+  <div class="app-bar">
+    <div class="app-bar-logo">📋 Resultado de práctica</div>
+    <div class="app-bar-right"><span style="font-size:11px;color:#888;">20 Nov 2025 · Sesión #12</span></div>
+  </div>
+  <div class="g2" style="margin-bottom:14px;">
+    <div class="box">
+      <div class="box-head">Puntuación final</div>
+      <div class="box-body" style="text-align:center;padding:20px;">
+        <div style="font-size:52px;font-weight:bold;line-height:1;">82%</div>
+        <div style="margin-top:8px;"><span class="chip ok">Desempeño: BUENO</span></div>
+        <div class="pbar-bg" style="margin-top:12px;height:14px;"><div class="pbar-fill" style="width:82%;"></div></div>
+        <div style="font-size:10px;color:#aaa;margin-top:4px;">+8 XP ganados</div>
+      </div>
+    </div>
+    <div class="box">
+      <div class="box-head">Resumen de sesión</div>
+      <div class="box-body" style="font-size:12px;line-height:2.2;">
+        ⏱ Duración: <strong>5 min 12 seg</strong><br>
+        🚦 Infracciones: <strong>2</strong><br>
+        🚶 Conflictos con peatones: <strong>0</strong><br>
+        ⚡ Velocidad máxima: <strong>54 km/h</strong><br>
+        🎯 Señales respetadas: <strong>8/10</strong>
+      </div>
+    </div>
+  </div>
+  <div class="box" style="margin-bottom:14px;">
+    <div class="box-head">Métricas de desempeño</div>
+    <div class="box-body">
+      <div class="pbar-row"><div class="pbar-lbl">Seguridad vial</div><div class="pbar-bg"><div class="pbar-fill" style="width:88%;"></div></div><div class="pbar-val">88%</div></div>
+      <div class="pbar-row"><div class="pbar-lbl">Respeto de señales</div><div class="pbar-bg"><div class="pbar-fill" style="width:75%;"></div></div><div class="pbar-val">75%</div></div>
+      <div class="pbar-row"><div class="pbar-lbl">Tiempo de reacción</div><div class="pbar-bg"><div class="pbar-fill" style="width:80%;"></div></div><div class="pbar-val">80%</div></div>
+      <div class="pbar-row"><div class="pbar-lbl">Control de velocidad</div><div class="pbar-bg"><div class="pbar-fill" style="width:92%;"></div></div><div class="pbar-val">92%</div></div>
+    </div>
+  </div>
+  <div class="box" style="margin-bottom:14px;">
+    <div class="box-head">Retroalimentación educativa</div>
+    <div class="box-body">
+      <div style="display:flex;gap:10px;margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid #eee;"><div style="font-size:20px;">⚠️</div><div style="font-size:12px;color:#555;line-height:1.7;"><strong>Señal de ceda el paso ignorada</strong><br>En la intersección del Km 2. Revisa señalización en zona de cruce.</div></div>
+      <div style="display:flex;gap:10px;margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid #eee;"><div style="font-size:20px;">⚡</div><div style="font-size:12px;color:#555;line-height:1.7;"><strong>Invasión de carril en curva cerrada</strong><br>Practica el trazado de curvas en el escenario "Manejo de curvas".</div></div>
+      <div style="display:flex;gap:10px;"><div style="font-size:20px;">✅</div><div style="font-size:12px;color:#555;line-height:1.7;"><strong>Excelente control de velocidad</strong><br>Mantuviste la velocidad adecuada el 94% del trayecto.</div></div>
+    </div>
+  </div>
+  <div style="display:flex;gap:10px;justify-content:flex-end;">
+    <button class="btn sec" onclick="ir('metricas')">📊 Ver historial</button>
+    <button class="btn" onclick="ir('escenario')">▶ Nueva práctica</button>
+  </div>
+</div>
+
+<!-- MÉTRICAS -->
+<div id="screen-metricas" class="screen">
+  <div class="app-bar">
+    <div class="app-bar-logo">📊 Mis Métricas</div>
+    <div class="app-bar-right"><button class="btn sm sec" onclick="ir('dashboard')">← Inicio</button></div>
+  </div>
+  <div class="pg-title">Mi Progreso</div>
+  <div class="pg-sub">Historial completo de desempeño</div>
+  <div class="chart-wrap">
+    <div style="font-size:11px;color:#888;margin-bottom:8px;text-transform:uppercase;letter-spacing:1px;">Evolución del puntaje</div>
+    <svg viewBox="0 0 520 100" xmlns="http://www.w3.org/2000/svg" style="width:100%;">
+      <line x1="40" y1="10" x2="500" y2="10" stroke="#ddd" stroke-width="1"/>
+      <line x1="40" y1="40" x2="500" y2="40" stroke="#ddd" stroke-width="1"/>
+      <line x1="40" y1="70" x2="500" y2="70" stroke="#ddd" stroke-width="1"/>
+      <line x1="40" y1="10" x2="40" y2="80" stroke="#aaa" stroke-width="1"/>
+      <text x="32" y="13" font-size="8" fill="#aaa" text-anchor="end">100%</text>
+      <text x="32" y="43" font-size="8" fill="#aaa" text-anchor="end">50%</text>
+      <text x="32" y="73" font-size="8" fill="#aaa" text-anchor="end">0%</text>
+      <polyline points="80,68 150,58 220,54 290,47 360,42 430,36 500,33" fill="none" stroke="#555" stroke-width="2"/>
+      <circle cx="80" cy="68" r="3" fill="#555"/><circle cx="150" cy="58" r="3" fill="#555"/>
+      <circle cx="220" cy="54" r="3" fill="#555"/><circle cx="290" cy="47" r="3" fill="#555"/>
+      <circle cx="360" cy="42" r="3" fill="#555"/><circle cx="430" cy="36" r="3" fill="#555"/>
+      <circle cx="500" cy="33" r="3" fill="#333"/>
+      <text x="80" y="94" font-size="8" fill="#aaa" text-anchor="middle">Nov 1</text>
+      <text x="220" y="94" font-size="8" fill="#aaa" text-anchor="middle">Nov 10</text>
+      <text x="360" y="94" font-size="8" fill="#aaa" text-anchor="middle">Nov 18</text>
+      <text x="500" y="94" font-size="8" fill="#aaa" text-anchor="middle">Hoy</text>
+    </svg>
+  </div>
+  <div class="box" style="margin-bottom:14px;">
+    <div class="box-head">Historial de prácticas</div>
+    <div class="box-body" style="padding:0;">
+      <table class="wtable">
+        <tr><th>#</th><th>Fecha</th><th>Escenario</th><th>Nivel</th><th>Puntaje</th><th>Duración</th></tr>
+        <tr><td>12</td><td>20 Nov</td><td>Zona Urbana</td><td>Básico</td><td>82%</td><td>5:12</td></tr>
+        <tr><td>11</td><td>18 Nov</td><td>Cruce</td><td>Intermedio</td><td>68%</td><td>6:40</td></tr>
+        <tr><td>10</td><td>15 Nov</td><td>Zona Urbana</td><td>Básico</td><td>71%</td><td>4:55</td></tr>
+        <tr><td>9</td><td>11 Nov</td><td>Autopista</td><td>Básico</td><td>65%</td><td>7:20</td></tr>
+      </table>
+    </div>
+  </div>
+  <div class="g2">
+    <div class="box">
+      <div class="box-head">Logros y recompensas</div>
+      <div class="box-body">
+        <div class="badge-row">
+          <div class="badge-item"><div class="bi">🏆</div>Primera sesión</div>
+          <div class="badge-item"><div class="bi">⭐</div>5 prácticas</div>
+          <div class="badge-item"><div class="bi">🚦</div>Sin infracciones</div>
+          <div class="badge-item locked"><div class="bi">🔒</div>10 prácticas</div>
+          <div class="badge-item locked"><div class="bi">🔒</div>Puntaje 90%</div>
+        </div>
+      </div>
+    </div>
+    <div class="box">
+      <div class="box-head">Ranking de la semana</div>
+      <div class="box-body" style="padding:0;">
+        <table class="wtable">
+          <tr><th>Pos.</th><th>Usuario</th><th>Promedio</th></tr>
+          <tr><td>🥇 1</td><td>Ana L.</td><td>91%</td></tr>
+          <tr><td>🥈 2</td><td><strong>Carlos V.</strong></td><td>82%</td></tr>
+          <tr><td>🥉 3</td><td>Pedro M.</td><td>78%</td></tr>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PERFIL -->
+<div id="screen-perfil" class="screen">
+  <div class="app-bar">
+    <div class="app-bar-logo">👤 Mi Perfil</div>
+    <div class="app-bar-right"><button class="btn sm sec" onclick="ir('dashboard')">← Inicio</button></div>
+  </div>
+  <div class="box" style="margin-bottom:14px;">
+    <div class="box-body" style="display:flex;align-items:center;gap:16px;">
+      <div class="avatar-circle">CV</div>
+      <div>
+        <div style="font-size:16px;font-weight:bold;">Carlos Vera Sánchez</div>
+        <div style="font-size:11px;color:#888;">carlos.vera@uteq.edu.ec</div>
+        <div style="margin-top:6px;"><span class="chip ok">Nivel 2 · Conductor Básico</span></div>
+      </div>
+      <button class="btn sm sec" style="margin-left:auto;">✎ Editar</button>
+    </div>
+  </div>
+  <div class="g2" style="margin-bottom:14px;">
+    <div class="box">
+      <div class="box-head">Información personal</div>
+      <div class="box-body">
+        <div style="font-size:11px;color:#888;margin-bottom:4px;">NOMBRE COMPLETO</div>
+        <input class="wfi" value="Carlos Daniel Vera Sánchez"/>
+        <div style="font-size:11px;color:#888;margin-bottom:4px;">CORREO</div>
+        <input class="wfi" value="carlos.vera@uteq.edu.ec"/>
+        <button class="btn full">Guardar cambios</button>
+      </div>
+    </div>
+    <div class="box">
+      <div class="box-head">Estadísticas del perfil</div>
+      <div class="box-body" style="font-size:12px;line-height:2.3;">
+        Prácticas totales: <strong>12</strong><br>
+        Horas de práctica: <strong>1h 45min</strong><br>
+        Mejor puntaje: <strong>82%</strong><br>
+        Racha actual: <strong>4 días</strong><br>
+        Nivel de teoría: <strong>2/5</strong>
+      </div>
+    </div>
+  </div>
+  <div class="box">
+    <div class="box-head">Cambiar contraseña</div>
+    <div class="box-body">
+      <div style="font-size:11px;color:#888;margin-bottom:4px;">NUEVA CONTRASEÑA</div>
+      <input class="wfi" placeholder="••••••••"/>
+      <div style="font-size:11px;color:#888;margin-bottom:4px;">CONFIRMAR CONTRASEÑA</div>
+      <input class="wfi" placeholder="••••••••"/>
+      <button class="btn sec">Actualizar contraseña</button>
+    </div>
+  </div>
+</div>
+
+<!-- NOTIFICACIONES -->
+<div id="screen-notif" class="screen">
+  <div class="app-bar">
+    <div class="app-bar-logo">🔔 Notificaciones</div>
+    <div class="app-bar-right"><button class="btn sm sec" onclick="ir('dashboard')">← Inicio</button></div>
+  </div>
+  <div class="box">
+    <div class="box-head">Recientes</div>
+    <div class="box-body">
+      <div class="notif"><div class="notif-icon">🏅</div><div class="notif-text">¡Obtuviste la insignia <strong>"Sin infracciones"</strong>! Completaste una práctica sin ninguna falla.</div><div class="notif-time">Hoy</div></div>
+      <div class="notif"><div class="notif-icon">📈</div><div class="notif-text">Tu puntaje promedio subió al <strong>74%</strong>. ¡Mejora del 8% respecto a la semana pasada!</div><div class="notif-time">Ayer</div></div>
+      <div class="notif"><div class="notif-icon">📖</div><div class="notif-text">Nuevo módulo de teoría disponible: <strong>"Señales en zona escolar"</strong>. Complétalo antes de tu próxima práctica.</div><div class="notif-time">18 Nov</div></div>
+      <div class="notif"><div class="notif-icon">🚗</div><div class="notif-text">Tu instructor <strong>Pedro Muñoz</strong> revisó tu última práctica y dejó comentarios.</div><div class="notif-time">17 Nov</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ADMIN -->
+<div id="screen-admin" class="screen">
+  <div class="app-bar">
+    <div class="app-bar-logo">⚙ Administración</div>
+    <div class="app-bar-right"><span style="font-size:11px;background:#444;color:#fff;padding:3px 8px;">ADMIN</span></div>
+  </div>
+  <div class="tab-row">
+    <div class="tab-item on">Usuarios</div>
+    <div class="tab-item">Escenarios</div>
+    <div class="tab-item">Normativas</div>
+    <div class="tab-item">Estadísticas</div>
+  </div>
+  <div class="g3" style="margin-bottom:14px;">
+    <div class="stat-box"><span class="stat-n">24</span><div class="stat-l">Usuarios</div></div>
+    <div class="stat-box"><span class="stat-n">6</span><div class="stat-l">Escenarios activos</div></div>
+    <div class="stat-box"><span class="stat-n">18</span><div class="stat-l">Normativas</div></div>
+  </div>
+  <div class="box" style="margin-bottom:14px;">
+    <div class="box-head" style="display:flex;justify-content:space-between;align-items:center;"><span>Gestión de usuarios</span><button class="btn sm">+ Nuevo usuario</button></div>
+    <div class="box-body">
+      <input class="wfi" placeholder="🔍 Buscar usuario..." style="margin-bottom:10px;"/>
+      <table class="wtable">
+        <tr><th>Nombre</th><th>Rol</th><th>Prácticas</th><th>Último acceso</th><th>Acciones</th></tr>
+        <tr><td>Carlos Vera</td><td><span class="chip ok">Aprendiz</span></td><td>12</td><td>Hoy</td><td><button class="btn sm">✎</button> <button class="btn sm sec">✕</button></td></tr>
+        <tr><td>Ana López</td><td><span class="chip ok">Aprendiz</span></td><td>7</td><td>18 Nov</td><td><button class="btn sm">✎</button> <button class="btn sm sec">✕</button></td></tr>
+        <tr><td>Pedro Muñoz</td><td><span class="chip warn">Instructor</span></td><td>—</td><td>20 Nov</td><td><button class="btn sm">✎</button> <button class="btn sm sec">✕</button></td></tr>
+      </table>
+    </div>
+  </div>
+  <div class="g2">
+    <div class="box">
+      <div class="box-head">Configurar escenario</div>
+      <div class="box-body">
+        <div style="font-size:11px;color:#888;margin-bottom:4px;">ESCENARIO</div>
+        <select class="wsel"><option>Zona Urbana</option><option>Autopista</option><option>Lluvia y niebla</option></select>
+        <div style="font-size:11px;color:#888;margin-bottom:4px;">DENSIDAD DE TRÁFICO</div>
+        <input class="wfi" placeholder="Alta (80%)"/>
+        <div style="font-size:11px;color:#888;margin-bottom:4px;">CONDICIÓN CLIMÁTICA</div>
+        <input class="wfi" placeholder="Soleado"/>
+        <button class="btn full">Guardar cambios</button>
+      </div>
+    </div>
+    <div class="box">
+      <div class="box-head">Nueva normativa de tránsito</div>
+      <div class="box-body">
+        <div style="font-size:11px;color:#888;margin-bottom:4px;">ARTÍCULO / DESCRIPCIÓN</div>
+        <input class="wfi" placeholder="Art. 142 — Ceda el paso..."/>
+        <div style="font-size:11px;color:#888;margin-bottom:4px;">TIPO DE INFRACCIÓN</div>
+        <select class="wsel"><option>Leve</option><option>Grave</option><option>Muy grave</option></select>
+        <div style="font-size:11px;color:#888;margin-bottom:4px;">PENALIDAD (puntos)</div>
+        <input class="wfi" placeholder="-10"/>
+        <button class="btn full">Registrar normativa</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div style="text-align:center;padding:20px;font-size:10px;color:#aaa;font-family:Arial,sans-serif;border-top:1px solid #ccc;margin-top:40px;">
+  Prototipo de Baja Fidelidad · Simulador de Comportamiento Vial con IA<br>
+  Panamá Murillo · Vera Sánchez · Zamora Bumbila — Ingeniería en Software · UTEQ · 2025
+</div>
+
+<script>
+function ir(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.tb').forEach(b=>b.classList.remove('on'));
+  document.getElementById('screen-'+id).classList.add('active');
+  const ids=['onboard','login','dashboard','teoria','escenario','practica','resultado','metricas','perfil','notif','admin'];
+  const i=ids.indexOf(id);
+  if(i>=0)document.querySelectorAll('.tb')[i].classList.add('on');
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+</script>
+</body>
+</html>

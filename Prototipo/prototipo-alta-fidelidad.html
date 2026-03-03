@@ -1,0 +1,1242 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Simulador Vial IA — Alta Fidelidad</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#080d18;--s1:#0d1525;--s2:#111e32;--s3:#162240;
+  --b1:rgba(56,139,255,.1);--b2:rgba(56,139,255,.2);--b3:rgba(56,139,255,.35);
+  --ac:#388bff;--ac2:#6aadff;--ac3:rgba(56,139,255,.18);
+  --gr:#21d48a;--gr2:rgba(33,212,138,.15);--gr3:rgba(33,212,138,.25);
+  --yl:#f5c430;--yl2:rgba(245,196,48,.13);
+  --rd:#ff4f5e;--rd2:rgba(255,79,94,.13);
+  --pu:#a855f7;--pu2:rgba(168,85,247,.13);
+  --t1:#e8edf8;--t2:#7d9bbf;--t3:#3e5570;
+  --font:'Outfit',sans-serif;--mono:'JetBrains Mono',monospace;
+  --r:14px;--r2:10px;
+}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{font-family:var(--font);background:var(--bg);color:var(--t1);min-height:100vh;line-height:1.5;}
+
+/* TOOL BAR */
+.pbar{background:#050810;border-bottom:1px solid var(--b1);padding:7px 16px;display:flex;align-items:center;gap:5px;flex-wrap:wrap;position:sticky;top:0;z-index:1000;}
+.pbar-lbl{font-size:10px;color:var(--t3);font-family:var(--mono);margin-right:8px;white-space:nowrap;}
+.pn{background:var(--s2);color:var(--t2);border:1px solid var(--b1);padding:4px 11px;border-radius:6px;font-size:11px;cursor:pointer;font-family:var(--font);font-weight:500;transition:all .15s;}
+.pn:hover{background:var(--s3);color:var(--t1);}
+.pn.on{background:var(--ac);color:#fff;border-color:var(--ac);}
+
+/* SCREENS */
+.screen{display:none;}
+.screen.active{display:block;}
+
+/* APP SHELL */
+.shell{display:flex;min-height:calc(100vh - 40px);}
+
+/* SIDEBAR */
+.sidebar{width:224px;background:var(--s1);border-right:1px solid var(--b1);padding:20px 0;flex-shrink:0;position:relative;display:flex;flex-direction:column;}
+.sb-logo{padding:0 18px 20px;border-bottom:1px solid var(--b1);margin-bottom:14px;}
+.sb-logo-wrap{display:flex;align-items:center;gap:10px;}
+.sb-icon{width:36px;height:36px;background:linear-gradient(135deg,var(--ac),#5b6aff);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;box-shadow:0 0 20px rgba(56,139,255,.3);}
+.sb-name{font-size:15px;font-weight:800;}
+.sb-sub{font-size:10px;color:var(--t3);font-family:var(--mono);}
+
+.sb-section{padding:0 10px;margin-bottom:6px;}
+.sb-section-lbl{font-size:9px;text-transform:uppercase;letter-spacing:2px;color:var(--t3);padding:0 8px;margin-bottom:5px;}
+.sb-item{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:var(--r2);font-size:13px;font-weight:500;color:var(--t2);cursor:pointer;transition:all .18s;margin-bottom:2px;}
+.sb-item:hover{background:var(--s2);color:var(--t1);}
+.sb-item.on{background:var(--ac3);color:var(--ac);}
+.sb-item-icon{font-size:15px;width:20px;text-align:center;}
+.sb-item-badge{margin-left:auto;background:var(--rd);color:#fff;font-size:9px;font-weight:700;padding:1px 5px;border-radius:10px;}
+
+.sb-user{border-top:1px solid var(--b1);padding:14px 16px;display:flex;align-items:center;gap:10px;margin-top:auto;}
+.avatar{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--ac),var(--gr));display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;flex-shrink:0;}
+.avatar.admin{background:linear-gradient(135deg,var(--yl),#ff8c00);}
+.u-name{font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.u-role{font-size:10px;color:var(--t3);}
+
+/* MAIN */
+.main{flex:1;padding:28px 32px;overflow-x:hidden;}
+.ph{margin-bottom:26px;}
+.pt{font-size:24px;font-weight:800;margin-bottom:3px;}
+.ps{font-size:13px;color:var(--t2);}
+
+/* CARD */
+.card{background:var(--s1);border:1px solid var(--b1);border-radius:var(--r);overflow:hidden;}
+.card-h{padding:14px 18px;border-bottom:1px solid var(--b1);display:flex;align-items:center;justify-content:space-between;}
+.card-t{font-size:13px;font-weight:700;}
+.card-b{padding:18px;}
+.tag{font-size:9px;font-family:var(--mono);background:var(--ac3);color:var(--ac);padding:2px 7px;border-radius:4px;border:1px solid var(--b2);}
+
+/* STAT CARDS */
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:18px;}
+.sc{background:var(--s1);border:1px solid var(--b1);border-radius:var(--r);padding:18px;position:relative;overflow:hidden;transition:border-color .2s,transform .2s;cursor:default;}
+.sc:hover{border-color:var(--b2);transform:translateY(-2px);}
+.sc::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;}
+.sc.bl::before{background:var(--ac);}
+.sc.gn::before{background:var(--gr);}
+.sc.yl::before{background:var(--yl);}
+.sc.pu::before{background:var(--pu);}
+.sc-icon{font-size:22px;margin-bottom:12px;}
+.sc-val{font-size:28px;font-weight:800;color:var(--t1);margin-bottom:2px;}
+.sc-lbl{font-size:11px;color:var(--t2);}
+.sc-delta{font-size:11px;margin-top:6px;}
+.sc-delta.up{color:var(--gr);}
+.sc-delta.dn{color:var(--rd);}
+.sc-delta.neu{color:var(--t3);}
+
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;gap:7px;padding:9px 18px;border-radius:var(--r2);font-family:var(--font);font-size:13px;font-weight:600;cursor:pointer;transition:all .2s;border:none;}
+.btn-p{background:var(--ac);color:#fff;box-shadow:0 0 20px rgba(56,139,255,.25);}
+.btn-p:hover{background:var(--ac2);box-shadow:0 0 28px rgba(56,139,255,.35);}
+.btn-s{background:var(--s2);color:var(--t1);border:1px solid var(--b1);}
+.btn-s:hover{background:var(--s3);border-color:var(--b2);}
+.btn-g{background:transparent;color:var(--t2);border:1px solid var(--b1);}
+.btn-g:hover{background:var(--s2);color:var(--t1);}
+.btn-gr{background:var(--gr2);color:var(--gr);border:1px solid var(--gr3);}
+.btn-rd{background:var(--rd2);color:var(--rd);border:1px solid rgba(255,79,94,.25);}
+.btn-lg{padding:12px 24px;font-size:14px;border-radius:var(--r);}
+.btn-sm{padding:5px 11px;font-size:11px;border-radius:6px;}
+.btn-full{width:100%;justify-content:center;}
+
+/* INPUT */
+.fg{margin-bottom:16px;}
+.fl{font-size:11px;font-weight:600;color:var(--t2);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;display:block;}
+.fi{width:100%;background:var(--s2);border:1px solid var(--b1);border-radius:var(--r2);padding:10px 14px;color:var(--t1);font-family:var(--font);font-size:13px;transition:border-color .2s;outline:none;}
+.fi:focus{border-color:var(--ac);box-shadow:0 0 0 3px rgba(56,139,255,.15);}
+.fi::placeholder{color:var(--t3);}
+select.fi{cursor:pointer;}
+
+/* CHIP */
+.chip{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:600;}
+.chip-g{background:var(--gr2);color:var(--gr);border:1px solid var(--gr3);}
+.chip-b{background:var(--ac3);color:var(--ac);border:1px solid var(--b2);}
+.chip-y{background:var(--yl2);color:var(--yl);border:1px solid rgba(245,196,48,.25);}
+.chip-r{background:var(--rd2);color:var(--rd);border:1px solid rgba(255,79,94,.25);}
+.chip-p{background:var(--pu2);color:var(--pu);border:1px solid rgba(168,85,247,.25);}
+
+/* GRIDS */
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;}
+.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;}
+.mb{margin-bottom:16px;}
+
+/* PROGRESS */
+.pt-track{background:var(--s3);border-radius:99px;height:8px;overflow:hidden;}
+.pt-fill{height:100%;border-radius:99px;}
+.pt-fill.bl{background:linear-gradient(90deg,var(--ac),var(--ac2));}
+.pt-fill.gn{background:linear-gradient(90deg,#17c97e,var(--gr));}
+.pt-fill.yl{background:linear-gradient(90deg,#e6a800,var(--yl));}
+.pt-fill.rd{background:linear-gradient(90deg,#e03440,var(--rd));}
+
+.m-row{display:flex;align-items:center;gap:14px;margin-bottom:14px;}
+.m-row:last-child{margin-bottom:0;}
+.m-lbl{width:160px;font-size:12px;color:var(--t2);flex-shrink:0;}
+.m-trk{flex:1;}
+.m-val{width:38px;text-align:right;font-size:12px;font-weight:700;}
+
+/* TABLE */
+.dt{width:100%;border-collapse:collapse;font-size:13px;}
+.dt th{padding:10px 14px;text-align:left;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--t3);background:var(--s2);border-bottom:1px solid var(--b1);}
+.dt td{padding:11px 14px;border-bottom:1px solid var(--b1);color:var(--t1);}
+.dt tr:hover td{background:rgba(255,255,255,.02);}
+.dt tr:last-child td{border-bottom:none;}
+
+/* DIVIDER */
+hr.d{border:none;border-top:1px solid var(--b1);margin:18px 0;}
+
+/* SCROLLBAR */
+::-webkit-scrollbar{width:5px;height:5px;}
+::-webkit-scrollbar-track{background:var(--bg);}
+::-webkit-scrollbar-thumb{background:var(--s3);border-radius:3px;}
+
+/* ============ LOGIN PAGE ============ */
+.login-page{min-height:calc(100vh - 40px);display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;}
+.login-bg{position:absolute;inset:0;background:radial-gradient(ellipse 60% 60% at 20% 50%,rgba(56,139,255,.07) 0%,transparent 70%),radial-gradient(ellipse 50% 50% at 80% 30%,rgba(33,212,138,.05) 0%,transparent 70%),var(--bg);}
+.grid-bg{position:absolute;inset:0;background-image:linear-gradient(rgba(56,139,255,.035) 1px,transparent 1px),linear-gradient(90deg,rgba(56,139,255,.035) 1px,transparent 1px);background-size:44px 44px;}
+.login-box{position:relative;width:420px;background:var(--s1);border:1px solid var(--b1);border-radius:20px;padding:40px;box-shadow:0 24px 80px rgba(0,0,0,.5);}
+.login-logo{display:flex;align-items:center;gap:12px;margin-bottom:30px;}
+.login-icon{width:48px;height:48px;background:linear-gradient(135deg,var(--ac),#5b6aff);border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:24px;box-shadow:0 0 30px rgba(56,139,255,.3);}
+
+/* ============ ONBOARDING ============ */
+.ob-page{min-height:calc(100vh - 40px);display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;}
+.ob-box{position:relative;width:480px;background:var(--s1);border:1px solid var(--b1);border-radius:24px;padding:48px;text-align:center;box-shadow:0 24px 80px rgba(0,0,0,.5);}
+.ob-icon{font-size:64px;margin-bottom:20px;display:block;}
+.ob-title{font-size:28px;font-weight:800;margin-bottom:10px;}
+.ob-desc{font-size:14px;color:var(--t2);line-height:1.75;margin-bottom:30px;}
+.ob-dots{display:flex;gap:8px;justify-content:center;margin-bottom:28px;}
+.ob-dot{width:8px;height:8px;border-radius:50%;background:var(--s3);}
+.ob-dot.on{background:var(--ac);width:24px;border-radius:4px;}
+.ob-features{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:28px;}
+.ob-feat{background:var(--s2);border:1px solid var(--b1);border-radius:var(--r);padding:16px 10px;text-align:center;}
+.ob-feat-icon{font-size:24px;margin-bottom:8px;}
+.ob-feat-text{font-size:11px;color:var(--t2);line-height:1.5;}
+
+/* ============ SIMULATOR ============ */
+.sim-layout{display:flex;gap:16px;align-items:flex-start;}
+.sim-main{flex:1;}
+.sim-panel{width:248px;flex-shrink:0;display:flex;flex-direction:column;gap:14px;}
+
+.sim-vp{background:linear-gradient(180deg,#0a1520 0%,#0e1e1e 60%,#111e18 100%);border:1px solid var(--b1);border-radius:var(--r);height:360px;position:relative;overflow:hidden;}
+.sim-sky{position:absolute;top:0;left:0;right:0;height:130px;background:linear-gradient(180deg,#060d1e 0%,#0a1430 100%);}
+.sim-star{position:absolute;width:2px;height:2px;border-radius:50%;background:#fff;opacity:.5;}
+.sim-ground{position:absolute;bottom:0;left:0;right:0;height:230px;background:linear-gradient(180deg,#141e14 0%,#0f1810 100%);}
+.sim-road-wrap{position:absolute;bottom:0;left:0;right:0;height:230px;}
+.sim-road{position:absolute;bottom:0;left:50%;transform:translateX(-50%);width:220px;height:230px;background:#1a2020;clip-path:polygon(28% 0%,72% 0%,100% 100%,0% 100%);}
+.sim-dashes{position:absolute;bottom:0;left:50%;transform:translateX(-50%);width:3px;height:230px;background:repeating-linear-gradient(to top,var(--yl) 0px,var(--yl) 18px,transparent 18px,transparent 36px);}
+.sim-car-w{position:absolute;bottom:28px;left:50%;transform:translateX(-50%);font-size:36px;text-align:center;filter:drop-shadow(0 0 12px rgba(56,139,255,.4));animation:float 2.5s ease-in-out infinite;}
+@keyframes float{0%,100%{transform:translateX(-50%) translateY(0);}50%{transform:translateX(-50%) translateY(-3px);}}
+.sim-tl{position:absolute;top:85px;right:28%;background:#111;border-radius:8px;padding:6px;width:24px;border:1px solid #333;display:flex;flex-direction:column;gap:4px;align-items:center;}
+.tl{width:12px;height:12px;border-radius:50%;background:#1a1a1a;}
+.tl.r.on{background:var(--rd);box-shadow:0 0 8px var(--rd);}
+.tl.y.on{background:var(--yl);box-shadow:0 0 8px var(--yl);}
+.tl.g.on{background:var(--gr);box-shadow:0 0 8px var(--gr);}
+.sim-hud-l{position:absolute;top:12px;left:12px;display:flex;flex-direction:column;gap:6px;}
+.sim-hud-r{position:absolute;top:12px;right:12px;display:flex;flex-direction:column;gap:6px;align-items:flex-end;}
+.hud-pill{background:rgba(8,13,24,.88);backdrop-filter:blur(10px);border:1px solid var(--b1);border-radius:8px;padding:6px 11px;font-size:11px;font-family:var(--mono);display:flex;align-items:center;gap:6px;}
+.hud-val{font-weight:700;color:var(--ac2);}
+.hud-lbl{color:var(--t3);}
+
+.ctrl-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;max-width:168px;margin:14px auto 0;}
+.ctrl-k{background:var(--s2);border:1px solid var(--b1);border-radius:var(--r2);padding:13px;text-align:center;font-size:15px;cursor:pointer;transition:all .14s;user-select:none;}
+.ctrl-k:hover,.ctrl-k:active{background:var(--s3);border-color:var(--ac);transform:scale(.95);}
+
+/* ============ FEEDBACK ============ */
+.fb-item{display:flex;gap:12px;padding:13px 0;border-bottom:1px solid var(--b1);}
+.fb-item:last-child{border-bottom:none;}
+.fb-ico{width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;}
+.fb-ico.warn{background:var(--yl2);}
+.fb-ico.ok{background:var(--gr2);}
+.fb-ico.err{background:var(--rd2);}
+.fb-t{font-size:13px;font-weight:700;margin-bottom:3px;}
+.fb-d{font-size:11px;color:var(--t2);line-height:1.6;}
+
+/* ============ BADGES ============ */
+.bdg-grid{display:flex;gap:10px;flex-wrap:wrap;}
+.bdg{background:var(--s2);border:1px solid var(--b1);border-radius:var(--r);padding:14px 10px;text-align:center;width:80px;transition:all .18s;cursor:default;}
+.bdg:hover{border-color:var(--b2);transform:translateY(-2px);}
+.bdg.lk{opacity:.35;}
+.bdg-emoji{font-size:26px;display:block;margin-bottom:6px;}
+.bdg-name{font-size:9px;color:var(--t2);line-height:1.4;}
+
+/* ============ TEORIA ============ */
+.t-tab-bar{display:flex;gap:4px;background:var(--s1);border:1px solid var(--b1);border-radius:var(--r);padding:4px;margin-bottom:18px;}
+.t-tab{flex:1;text-align:center;padding:8px;border-radius:9px;font-size:12px;font-weight:600;cursor:pointer;transition:all .17s;color:var(--t2);}
+.t-tab:hover{background:var(--s2);}
+.t-tab.on{background:var(--ac);color:#fff;}
+
+.t-card{background:var(--s2);border:1px solid var(--b1);border-radius:var(--r);padding:16px;transition:all .18s;}
+.t-card:hover{border-color:var(--b2);transform:translateY(-2px);}
+.t-card-icon{font-size:30px;margin-bottom:10px;}
+.t-card-title{font-size:14px;font-weight:700;margin-bottom:5px;}
+.t-card-desc{font-size:11px;color:var(--t2);line-height:1.6;margin-bottom:12px;}
+
+/* ============ LEADERBOARD ============ */
+.lb-row{display:flex;align-items:center;gap:14px;padding:12px 0;border-bottom:1px solid var(--b1);}
+.lb-row:last-child{border-bottom:none;}
+.lb-pos{font-size:18px;width:32px;text-align:center;}
+.lb-av{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;}
+.lb-name{flex:1;font-size:13px;font-weight:600;}
+.lb-name span{font-size:11px;color:var(--t3);font-weight:400;display:block;}
+.lb-score{font-size:14px;font-weight:800;color:var(--ac);}
+
+/* ============ INSTRUCTOR VIEW ============ */
+.review-card{background:var(--s2);border:1px solid var(--b1);border-radius:var(--r);padding:16px;margin-bottom:12px;}
+.rv-head{display:flex;align-items:center;gap:12px;margin-bottom:12px;}
+.rv-student{font-size:14px;font-weight:700;}
+.rv-date{font-size:11px;color:var(--t3);}
+.rv-body{font-size:12px;color:var(--t2);line-height:1.7;}
+.rv-actions{display:flex;gap:8px;margin-top:12px;}
+
+/* ============ NOTIF ============ */
+.n-item{display:flex;gap:12px;padding:13px 0;border-bottom:1px solid var(--b1);}
+.n-item:last-child{border-bottom:none;}
+.n-ico{font-size:20px;width:30px;flex-shrink:0;}
+.n-text{flex:1;font-size:13px;color:var(--t2);line-height:1.6;}
+.n-time{font-size:10px;color:var(--t3);white-space:nowrap;}
+.n-item.unread .n-text{color:var(--t1);}
+.n-dot{width:8px;height:8px;border-radius:50%;background:var(--ac);flex-shrink:0;margin-top:6px;}
+
+/* ============ CHART ============ */
+.chart-wrap{padding:8px 0;}
+
+/* ============ QUIZ ============ */
+.quiz-opt{background:var(--s2);border:1px solid var(--b1);border-radius:var(--r2);padding:12px 16px;margin-bottom:8px;cursor:pointer;font-size:13px;transition:all .17s;}
+.quiz-opt:hover{border-color:var(--b2);background:var(--s3);}
+.quiz-opt.correct{border-color:var(--gr);background:var(--gr2);color:var(--gr);}
+.quiz-opt.wrong{border-color:var(--rd);background:var(--rd2);color:var(--rd);}
+
+/* ============ REPLAY ============ */
+.replay-tl{position:relative;height:8px;background:var(--s3);border-radius:4px;margin:14px 0;}
+.replay-prog{position:absolute;left:0;top:0;height:100%;width:45%;background:var(--ac);border-radius:4px;}
+.replay-head{position:absolute;left:45%;top:50%;transform:translate(-50%,-50%);width:16px;height:16px;border-radius:50%;background:var(--ac);cursor:pointer;}
+
+/* MISC */
+.alert{padding:12px 16px;border-radius:var(--r2);font-size:12px;margin-bottom:14px;display:flex;gap:10px;align-items:center;}
+.alert-w{background:var(--yl2);border:1px solid rgba(245,196,48,.2);color:var(--yl);}
+.alert-g{background:var(--gr2);border:1px solid var(--gr3);color:var(--gr);}
+.alert-r{background:var(--rd2);border:1px solid rgba(255,79,94,.25);color:var(--rd);}
+
+.donut-wrap{display:flex;align-items:center;justify-content:center;padding:18px 0;position:relative;}
+.donut-text{position:absolute;text-align:center;}
+.donut-val{font-size:34px;font-weight:900;line-height:1;}
+.donut-lbl{font-size:11px;color:var(--t2);margin-top:4px;}
+
+.pf{text-align:center;padding:24px;font-size:10px;color:var(--t3);font-family:var(--mono);border-top:1px solid var(--b1);margin-top:40px;}
+
+@media(max-width:768px){.sidebar{display:none;}.stats,.g2,.g3,.g4{grid-template-columns:1fr 1fr;}.sim-layout{flex-direction:column;}.sim-panel{width:100%;}}
+</style>
+</head>
+<body>
+
+<!-- PROTOTYPE NAV -->
+<div class="pbar">
+  <span class="pbar-lbl">Alta Fidelidad · Simulador Vial IA · UTEQ</span>
+  <button class="pn on"  onclick="ir('onboard')">Inicio</button>
+  <button class="pn" onclick="ir('login')">Login</button>
+  <button class="pn" onclick="ir('dashboard')">Dashboard</button>
+  <button class="pn" onclick="ir('teoria')">Teoría</button>
+  <button class="pn" onclick="ir('escenario')">Escenario</button>
+  <button class="pn" onclick="ir('practica')">Práctica</button>
+  <button class="pn" onclick="ir('resultado')">Resultado</button>
+  <button class="pn" onclick="ir('replay')">Replay</button>
+  <button class="pn" onclick="ir('metricas')">Métricas</button>
+  <button class="pn" onclick="ir('perfil')">Perfil</button>
+  <button class="pn" onclick="ir('notif')">Notificaciones</button>
+  <button class="pn" onclick="ir('instructor')">Instructor</button>
+  <button class="pn" onclick="ir('admin')">Admin</button>
+</div>
+
+<!-- ================================================================
+     ONBOARDING
+================================================================ -->
+<div id="screen-onboard" class="screen active">
+  <div class="ob-page">
+    <div class="login-bg"></div><div class="grid-bg"></div>
+    <div class="ob-box">
+      <div class="ob-dots">
+        <div class="ob-dot on"></div><div class="ob-dot"></div><div class="ob-dot"></div>
+      </div>
+      <span class="ob-icon">🚗</span>
+      <div class="ob-title">Conduce mejor, conduce seguro</div>
+      <div class="ob-desc">Simulador de comportamiento vial con inteligencia artificial. Practica en entornos reales, aprende de tus errores y certifica tu progreso.</div>
+      <div class="ob-features">
+        <div class="ob-feat"><div class="ob-feat-icon">📍</div><div class="ob-feat-text">Escenarios urbanos realistas</div></div>
+        <div class="ob-feat"><div class="ob-feat-icon">🤖</div><div class="ob-feat-text">Análisis con IA en tiempo real</div></div>
+        <div class="ob-feat"><div class="ob-feat-icon">📊</div><div class="ob-feat-text">Reportes y métricas de desempeño</div></div>
+        <div class="ob-feat"><div class="ob-feat-icon">🏅</div><div class="ob-feat-text">Sistema de logros y niveles</div></div>
+        <div class="ob-feat"><div class="ob-feat-icon">📖</div><div class="ob-feat-text">Centro de teoría vial</div></div>
+        <div class="ob-feat"><div class="ob-feat-icon">🎓</div><div class="ob-feat-text">Certificado de progreso</div></div>
+      </div>
+      <button class="btn btn-p btn-lg btn-full" onclick="ir('login')" style="margin-bottom:10px;">Comenzar gratis →</button>
+      <button class="btn btn-g btn-full" onclick="ir('login')">Ya tengo una cuenta</button>
+    </div>
+  </div>
+</div>
+
+<!-- ================================================================
+     LOGIN
+================================================================ -->
+<div id="screen-login" class="screen">
+  <div class="login-page">
+    <div class="login-bg"></div><div class="grid-bg"></div>
+    <div class="login-box">
+      <div class="login-logo">
+        <div class="login-icon">🚗</div>
+        <div>
+          <div style="font-size:20px;font-weight:800;">Simulador Vial IA</div>
+          <div style="font-size:11px;color:var(--t3);font-family:var(--mono);">UTEQ · Ingeniería en Software</div>
+        </div>
+      </div>
+      <div style="font-size:22px;font-weight:800;margin-bottom:6px;">Bienvenido de regreso</div>
+      <div style="font-size:13px;color:var(--t2);margin-bottom:26px;">Accede con tus credenciales institucionales.</div>
+
+      <div class="alert alert-r" id="login-err" style="display:none;">⚠ Credenciales incorrectas. Verifica e intenta de nuevo.</div>
+
+      <div class="fg"><label class="fl">Correo electrónico</label><input class="fi" type="email" placeholder="usuario@uteq.edu.ec"/></div>
+      <div class="fg"><label class="fl">Contraseña</label><input class="fi" type="password" placeholder="••••••••"/></div>
+
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+        <label style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--t2);cursor:pointer;"><input type="checkbox" style="accent-color:var(--ac);"> Recordarme</label>
+        <span style="font-size:12px;color:var(--ac);cursor:pointer;">¿Olvidaste tu contraseña?</span>
+      </div>
+
+      <button class="btn btn-p btn-lg btn-full" onclick="ir('dashboard')" style="margin-bottom:10px;">Iniciar sesión →</button>
+      <div style="text-align:center;font-size:12px;color:var(--t3);">¿No tienes cuenta? <span style="color:var(--ac);cursor:pointer;">Regístrate aquí</span></div>
+      <hr class="d">
+      <div style="font-size:10px;color:var(--t3);text-align:center;font-family:var(--mono);">Tus datos están protegidos con cifrado AES-256</div>
+    </div>
+  </div>
+</div>
+
+<!-- ================================================================
+     DASHBOARD
+================================================================ -->
+<div id="screen-dashboard" class="screen">
+<div class="shell">
+<aside class="sidebar">
+  <div class="sb-logo"><div class="sb-logo-wrap"><div class="sb-icon">🚗</div><div><div class="sb-name">Simulador Vial</div><div class="sb-sub">UTEQ · Software</div></div></div></div>
+  <div class="sb-section"><div class="sb-section-lbl">Principal</div>
+    <div class="sb-item on" onclick="ir('dashboard')"><span class="sb-item-icon">⊞</span> Dashboard</div>
+    <div class="sb-item" onclick="ir('escenario')"><span class="sb-item-icon">🗺</span> Nueva práctica</div>
+    <div class="sb-item" onclick="ir('teoria')"><span class="sb-item-icon">📖</span> Teoría vial</div>
+    <div class="sb-item" onclick="ir('metricas')"><span class="sb-item-icon">📊</span> Mis métricas</div>
+    <div class="sb-item" onclick="ir('resultado')"><span class="sb-item-icon">📋</span> Último informe</div>
+  </div>
+  <div class="sb-section" style="margin-top:10px;"><div class="sb-section-lbl">Cuenta</div>
+    <div class="sb-item" onclick="ir('perfil')"><span class="sb-item-icon">👤</span> Mi perfil</div>
+    <div class="sb-item" onclick="ir('notif')"><span class="sb-item-icon">🔔</span> Notificaciones <span class="sb-item-badge">2</span></div>
+    <div class="sb-item" onclick="ir('login')"><span class="sb-item-icon">→</span> Cerrar sesión</div>
+  </div>
+  <div class="sb-user"><div class="avatar">CV</div><div class="u-info"><div class="u-name">Carlos Vera</div><div class="u-role">Aprendiz · Nv. 2</div></div></div>
+</aside>
+<main class="main">
+  <div class="ph">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+      <div><div class="pt">¡Hola, Carlos 👋</div><div class="ps">Aquí está tu resumen de progreso</div></div>
+      <button class="btn btn-p" onclick="ir('escenario')">▶ Nueva práctica</button>
+    </div>
+  </div>
+
+  <div class="stats">
+    <div class="sc bl"><div class="sc-icon">🏁</div><div class="sc-val">12</div><div class="sc-lbl">Prácticas realizadas</div><div class="sc-delta up">↑ 3 esta semana</div></div>
+    <div class="sc gn"><div class="sc-icon">🎯</div><div class="sc-val">74%</div><div class="sc-lbl">Puntuación promedio</div><div class="sc-delta up">↑ +8% vs. sem. ant.</div></div>
+    <div class="sc yl"><div class="sc-icon">⚠</div><div class="sc-val">3</div><div class="sc-lbl">Infracciones totales</div><div class="sc-delta up">↓ mejora de 2</div></div>
+    <div class="sc pu"><div class="sc-icon">🏅</div><div class="sc-val">3</div><div class="sc-lbl">Insignias obtenidas</div><div class="sc-delta neu">de 8 disponibles</div></div>
+  </div>
+
+  <!-- Nivel XP -->
+  <div class="card mb">
+    <div class="card-b" style="display:flex;align-items:center;gap:16px;">
+      <div style="font-size:34px;">🥈</div>
+      <div style="flex:1;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+          <div style="font-size:14px;font-weight:700;">Nivel 2 — Conductor Básico</div>
+          <span class="chip chip-b">360 / 600 XP</span>
+        </div>
+        <div class="pt-track"><div class="pt-fill bl" style="width:60%;"></div></div>
+        <div style="font-size:11px;color:var(--t3);margin-top:4px;">Completa 2 prácticas más para subir al Nivel 3</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="g2 mb">
+    <div class="card">
+      <div class="card-h"><div class="card-t">Últimas prácticas</div><button class="btn btn-g btn-sm" onclick="ir('metricas')">Ver todas</button></div>
+      <div class="card-b" style="padding:0;">
+        <table class="dt">
+          <thead><tr><th>Fecha</th><th>Escenario</th><th>Nivel</th><th>Puntaje</th></tr></thead>
+          <tbody>
+            <tr><td>20 Nov</td><td>Zona Urbana</td><td><span class="chip chip-g">Básico</span></td><td style="color:var(--gr);font-weight:700;">82%</td></tr>
+            <tr><td>18 Nov</td><td>Cruce</td><td><span class="chip chip-y">Intermedio</span></td><td style="color:var(--yl);font-weight:700;">68%</td></tr>
+            <tr><td>15 Nov</td><td>Zona Urbana</td><td><span class="chip chip-g">Básico</span></td><td style="color:var(--yl);font-weight:700;">71%</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-h"><div class="card-t">Métricas de la semana</div></div>
+      <div class="card-b">
+        <div class="m-row"><div class="m-lbl">Seguridad vial</div><div class="m-trk"><div class="pt-track"><div class="pt-fill gn" style="width:88%;"></div></div></div><div class="m-val" style="color:var(--gr);">88%</div></div>
+        <div class="m-row"><div class="m-lbl">Respeto señales</div><div class="m-trk"><div class="pt-track"><div class="pt-fill yl" style="width:75%;"></div></div></div><div class="m-val" style="color:var(--yl);">75%</div></div>
+        <div class="m-row"><div class="m-lbl">Tiempo de reacción</div><div class="m-trk"><div class="pt-track"><div class="pt-fill bl" style="width:80%;"></div></div></div><div class="m-val" style="color:var(--ac);">80%</div></div>
+        <div class="m-row"><div class="m-lbl">Control velocidad</div><div class="m-trk"><div class="pt-track"><div class="pt-fill gn" style="width:92%;"></div></div></div><div class="m-val" style="color:var(--gr);">92%</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card mb">
+    <div class="card-h"><div class="card-t">💡 Consejo del día</div><span class="chip chip-b">IA</span></div>
+    <div class="card-b" style="font-size:13px;color:var(--t2);line-height:1.7;">
+      <strong style="color:var(--t1);">Distancia de seguimiento:</strong> Mantén al menos 3 segundos de distancia con el vehículo de adelante. En condiciones de lluvia, duplica esa distancia para garantizar tiempo de reacción suficiente en frenadas de emergencia.
+    </div>
+  </div>
+</main>
+</div>
+</div>
+
+<!-- ================================================================
+     TEORÍA VIAL
+================================================================ -->
+<div id="screen-teoria" class="screen">
+<div class="shell">
+<aside class="sidebar">
+  <div class="sb-logo"><div class="sb-logo-wrap"><div class="sb-icon">🚗</div><div><div class="sb-name">Simulador Vial</div><div class="sb-sub">UTEQ · Software</div></div></div></div>
+  <div class="sb-section"><div class="sb-section-lbl">Principal</div>
+    <div class="sb-item" onclick="ir('dashboard')"><span class="sb-item-icon">⊞</span> Dashboard</div>
+    <div class="sb-item" onclick="ir('escenario')"><span class="sb-item-icon">🗺</span> Nueva práctica</div>
+    <div class="sb-item on"><span class="sb-item-icon">📖</span> Teoría vial</div>
+    <div class="sb-item" onclick="ir('metricas')"><span class="sb-item-icon">📊</span> Mis métricas</div>
+  </div>
+  <div class="sb-user"><div class="avatar">CV</div><div class="u-info"><div class="u-name">Carlos Vera</div><div class="u-role">Aprendiz · Nv. 2</div></div></div>
+</aside>
+<main class="main">
+  <div class="ph"><div class="pt">Centro de Conocimiento</div><div class="ps">Repasa señales y normativas antes de practicar</div></div>
+
+  <div class="t-tab-bar">
+    <div class="t-tab on">Señales de tránsito</div>
+    <div class="t-tab">Normativa vial</div>
+    <div class="t-tab">Infracciones</div>
+    <div class="t-tab">Quizzes</div>
+  </div>
+
+  <div class="g3 mb">
+    <div class="t-card"><div class="t-card-icon">🛑</div><div class="t-card-title">Señal PARE</div><div class="t-card-desc">Detención completa obligatoria antes de la línea. Verificar ambos lados antes de continuar la marcha.</div><span class="chip chip-r">Obligatoria</span></div>
+    <div class="t-card"><div class="t-card-icon">⚠</div><div class="t-card-title">Ceda el Paso</div><div class="t-card-desc">Reducir velocidad y ceder preferencia a los vehículos que ya circulan en la vía principal.</div><span class="chip chip-y">Precaución</span></div>
+    <div class="t-card"><div class="t-card-icon">🚸</div><div class="t-card-title">Zona Escolar</div><div class="t-card-desc">Velocidad máxima 25 km/h. Mayor precaución con peatones menores de edad.</div><span class="chip chip-y">Precaución</span></div>
+    <div class="t-card"><div class="t-card-icon">🔄</div><div class="t-card-title">Rotonda</div><div class="t-card-desc">Prioridad para quienes circulan dentro. Ingresar solo cuando haya espacio seguro libre.</div><span class="chip chip-b">Prioridad</span></div>
+    <div class="t-card"><div class="t-card-icon">🚫</div><div class="t-card-title">Prohibición de paso</div><div class="t-card-desc">No circular en esa vía o carril. Puede ser temporal o permanente según señalización adicional.</div><span class="chip chip-r">Prohibición</span></div>
+    <div class="t-card"><div class="t-card-icon">🅿</div><div class="t-card-title">Estacionamiento</div><div class="t-card-desc">Zona habilitada para detener el vehículo. Respetar límites de tiempo y horarios indicados.</div><span class="chip chip-g">Permitido</span></div>
+  </div>
+
+  <div class="card">
+    <div class="card-h"><div class="card-t">Quiz rápido — Señales básicas</div><span class="tag">Nv. 1</span></div>
+    <div class="card-b">
+      <div style="font-size:14px;font-weight:600;margin-bottom:14px;">¿Qué indica una señal octagonal roja con la palabra "PARE"?</div>
+      <div class="quiz-opt">A) Reducir velocidad a 30 km/h y continuar</div>
+      <div class="quiz-opt correct">B) Detenerse completamente antes de la línea ✓</div>
+      <div class="quiz-opt">C) Ceder paso únicamente a vehículos de la derecha</div>
+      <div style="margin-top:12px;" class="alert alert-g">✓ ¡Correcto! La señal PARE exige detención total. Penalidad si se ignora: -15 puntos en simulación.</div>
+    </div>
+  </div>
+</main>
+</div>
+</div>
+
+<!-- ================================================================
+     SELECCIÓN DE ESCENARIO
+================================================================ -->
+<div id="screen-escenario" class="screen">
+<div class="shell">
+<aside class="sidebar">
+  <div class="sb-logo"><div class="sb-logo-wrap"><div class="sb-icon">🚗</div><div><div class="sb-name">Simulador Vial</div><div class="sb-sub">UTEQ · Software</div></div></div></div>
+  <div class="sb-section"><div class="sb-section-lbl">Principal</div>
+    <div class="sb-item" onclick="ir('dashboard')"><span class="sb-item-icon">⊞</span> Dashboard</div>
+    <div class="sb-item on"><span class="sb-item-icon">🗺</span> Nueva práctica</div>
+    <div class="sb-item" onclick="ir('teoria')"><span class="sb-item-icon">📖</span> Teoría vial</div>
+    <div class="sb-item" onclick="ir('metricas')"><span class="sb-item-icon">📊</span> Mis métricas</div>
+  </div>
+  <div class="sb-user"><div class="avatar">CV</div><div class="u-info"><div class="u-name">Carlos Vera</div><div class="u-role">Aprendiz · Nv. 2</div></div></div>
+</aside>
+<main class="main">
+  <div class="ph"><div class="pt">Seleccionar Escenario</div><div class="ps">Configura el entorno y la dificultad de tu práctica</div></div>
+
+  <div class="card mb">
+    <div class="card-h"><div class="card-t">Nivel de dificultad</div></div>
+    <div class="card-b">
+      <div style="display:flex;gap:12px;">
+        <div style="flex:1;background:var(--gr2);border:2px solid var(--gr3);border-radius:var(--r);padding:14px;cursor:pointer;text-align:center;">
+          <div style="font-size:24px;margin-bottom:6px;">🟢</div>
+          <div style="font-size:13px;font-weight:700;color:var(--gr);">Básico</div>
+          <div style="font-size:11px;color:var(--t3);margin-top:3px;">Velocidades bajas · señales simples</div>
+        </div>
+        <div style="flex:1;background:var(--s2);border:1px solid var(--b1);border-radius:var(--r);padding:14px;cursor:pointer;text-align:center;">
+          <div style="font-size:24px;margin-bottom:6px;">🟡</div>
+          <div style="font-size:13px;font-weight:700;color:var(--yl);">Intermedio</div>
+          <div style="font-size:11px;color:var(--t3);margin-top:3px;">Más tráfico · intersecciones</div>
+        </div>
+        <div style="flex:1;background:var(--s2);border:1px solid var(--b1);border-radius:var(--r);padding:14px;cursor:pointer;text-align:center;opacity:.5;">
+          <div style="font-size:24px;margin-bottom:6px;">🔴</div>
+          <div style="font-size:13px;font-weight:700;color:var(--rd);">Avanzado</div>
+          <div style="font-size:11px;color:var(--t3);margin-top:3px;">Condiciones adversas</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card mb">
+    <div class="card-h"><div class="card-t">Escenarios disponibles</div></div>
+    <div class="card-b">
+      <div class="g3">
+        <div style="background:var(--s2);border:2px solid var(--ac);border-radius:var(--r);overflow:hidden;cursor:pointer;box-shadow:0 0 0 3px rgba(56,139,255,.15);">
+          <div style="height:100px;background:linear-gradient(135deg,#1a2a4a,#0f1e35);display:flex;align-items:center;justify-content:center;font-size:40px;">🏙</div>
+          <div style="padding:12px;"><div style="font-size:14px;font-weight:700;margin-bottom:4px;">Zona Urbana</div><div style="font-size:11px;color:var(--t2);margin-bottom:8px;">Semáforos, peatones, intersecciones complejas.</div><div style="display:flex;gap:6px;"><span class="chip chip-g">Seleccionado ✓</span><span class="chip chip-b">12 min</span></div></div>
+        </div>
+        <div style="background:var(--s2);border:1px solid var(--b1);border-radius:var(--r);overflow:hidden;cursor:pointer;">
+          <div style="height:100px;background:linear-gradient(135deg,#1a3524,#0f2518);display:flex;align-items:center;justify-content:center;font-size:40px;">🛣</div>
+          <div style="padding:12px;"><div style="font-size:14px;font-weight:700;margin-bottom:4px;">Autopista</div><div style="font-size:11px;color:var(--t2);margin-bottom:8px;">Velocidades altas y cambios de carril.</div><div style="display:flex;gap:6px;"><span class="chip chip-y">Intermedio</span><span class="chip chip-b">15 min</span></div></div>
+        </div>
+        <div style="background:var(--s2);border:1px solid var(--b1);border-radius:var(--r);overflow:hidden;cursor:pointer;">
+          <div style="height:100px;background:linear-gradient(135deg,#1a2835,#0f1e28);display:flex;align-items:center;justify-content:center;font-size:40px;">🌧</div>
+          <div style="padding:12px;"><div style="font-size:14px;font-weight:700;margin-bottom:4px;">Lluvia y niebla</div><div style="font-size:11px;color:var(--t2);margin-bottom:8px;">Visibilidad reducida y piso mojado.</div><div style="display:flex;gap:6px;"><span class="chip chip-r">Avanzado</span><span class="chip chip-b">18 min</span></div></div>
+        </div>
+        <div style="background:var(--s2);border:1px solid var(--b1);border-radius:var(--r);overflow:hidden;cursor:pointer;">
+          <div style="height:100px;background:linear-gradient(135deg,#0a0a24,#050518);display:flex;align-items:center;justify-content:center;font-size:40px;">🌙</div>
+          <div style="padding:12px;"><div style="font-size:14px;font-weight:700;margin-bottom:4px;">Conducción nocturna</div><div style="font-size:11px;color:var(--t2);margin-bottom:8px;">Iluminación artificial, señales nocturnas.</div><div style="display:flex;gap:6px;"><span class="chip chip-y">Intermedio</span><span class="chip chip-b">14 min</span></div></div>
+        </div>
+        <div style="background:var(--s2);border:1px solid var(--b1);border-radius:var(--r);overflow:hidden;cursor:pointer;">
+          <div style="height:100px;background:linear-gradient(135deg,#252010,#18150a);display:flex;align-items:center;justify-content:center;font-size:40px;">🚦</div>
+          <div style="padding:12px;"><div style="font-size:14px;font-weight:700;margin-bottom:4px;">Centro de ciudad</div><div style="font-size:11px;color:var(--t2);margin-bottom:8px;">Alta densidad, peatones frecuentes.</div><div style="display:flex;gap:6px;"><span class="chip chip-r">Avanzado</span><span class="chip chip-b">20 min</span></div></div>
+        </div>
+        <div style="background:var(--s2);border:1px solid var(--b1);border-radius:var(--r);overflow:hidden;opacity:.4;cursor:not-allowed;">
+          <div style="height:100px;background:var(--s3);display:flex;align-items:center;justify-content:center;font-size:40px;">🔒</div>
+          <div style="padding:12px;"><div style="font-size:14px;font-weight:700;margin-bottom:4px;">Pendiente montañosa</div><div style="font-size:11px;color:var(--t2);">Desbloquea al alcanzar Nivel 3.</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div style="display:flex;justify-content:flex-end;gap:10px;">
+    <button class="btn btn-g" onclick="ir('dashboard')">← Cancelar</button>
+    <button class="btn btn-p btn-lg" onclick="ir('practica')">Iniciar práctica →</button>
+  </div>
+</main>
+</div>
+</div>
+
+<!-- ================================================================
+     PRÁCTICA ACTIVA
+================================================================ -->
+<div id="screen-practica" class="screen">
+<div class="shell">
+<aside class="sidebar">
+  <div class="sb-logo"><div class="sb-logo-wrap"><div class="sb-icon">🚗</div><div><div class="sb-name">Práctica Activa</div><div class="sb-sub">Zona Urbana · Básico</div></div></div></div>
+  <div class="sb-section" style="margin-top:8px;">
+    <div style="background:var(--gr2);border:1px solid var(--gr3);border-radius:var(--r);padding:12px;margin-bottom:12px;">
+      <div style="font-size:10px;color:var(--gr);font-weight:700;margin-bottom:6px;text-transform:uppercase;letter-spacing:1px;">● EN PROGRESO</div>
+      <div style="font-size:13px;font-weight:700;">Zona Urbana</div>
+      <div style="font-size:11px;color:var(--t2);">Nivel Básico · 02:34</div>
+    </div>
+  </div>
+  <div class="sb-user"><div class="avatar">CV</div><div class="u-info"><div class="u-name">Carlos Vera</div><div class="u-role">Práctica en curso</div></div></div>
+</aside>
+<main class="main">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+    <div><div class="pt">Práctica de Conducción</div><div class="ps">Zona Urbana · Nivel Básico · Sesión #13</div></div>
+    <div style="display:flex;gap:8px;">
+      <button class="btn btn-s">⏸ Pausar</button>
+      <button class="btn btn-rd" onclick="ir('resultado')">⏹ Finalizar</button>
+    </div>
+  </div>
+
+  <div class="sim-layout">
+    <div class="sim-main">
+      <div class="card mb" style="overflow:hidden;">
+        <div class="sim-vp">
+          <div class="sim-sky">
+            <div class="sim-star" style="top:20px;left:15%;"></div><div class="sim-star" style="top:40px;left:25%;"></div>
+            <div class="sim-star" style="top:15px;left:60%;"></div><div class="sim-star" style="top:35px;left:70%;"></div>
+            <div class="sim-star" style="top:25px;left:85%;"></div>
+          </div>
+          <div class="sim-ground"></div>
+          <div class="sim-road-wrap">
+            <div class="sim-road"></div>
+            <div class="sim-dashes"></div>
+          </div>
+          <div class="sim-tl"><div class="tl r on"></div><div class="tl y"></div><div class="tl g"></div></div>
+          <div class="sim-car-w">🚗</div>
+          <div style="position:absolute;top:115px;left:28%;font-size:20px;">🚶</div>
+          <div style="position:absolute;top:80px;right:22%;font-size:18px;">🚕</div>
+          <div class="sim-hud-l">
+            <div class="hud-pill"><span class="hud-val">42</span><span class="hud-lbl">km/h</span></div>
+            <div class="hud-pill"><span class="hud-val">02:34</span><span class="hud-lbl">tiempo</span></div>
+          </div>
+          <div class="sim-hud-r">
+            <div class="hud-pill" style="border-color:rgba(33,212,138,.3);"><span style="color:var(--gr);font-weight:700;">0</span><span class="hud-lbl">infracciones</span></div>
+            <div class="hud-pill" style="border-color:var(--b3);"><span class="hud-val">88%</span><span class="hud-lbl">puntaje</span></div>
+          </div>
+        </div>
+      </div>
+      <div style="text-align:center;margin-bottom:16px;">
+        <div style="font-size:11px;color:var(--t3);margin-bottom:10px;text-transform:uppercase;letter-spacing:1px;">Controles de conducción</div>
+        <div class="ctrl-grid">
+          <div></div><div class="ctrl-k">▲</div><div></div>
+          <div class="ctrl-k">◄</div><div class="ctrl-k" style="font-size:10px;font-weight:700;color:var(--rd);">FRENO</div><div class="ctrl-k">►</div>
+          <div></div><div class="ctrl-k">▼</div><div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="sim-panel">
+      <div class="card">
+        <div class="card-h"><div class="card-t">Análisis IA</div><span class="tag">Tiempo real</span></div>
+        <div class="card-b">
+          <div style="display:flex;flex-direction:column;gap:9px;font-size:12px;">
+            <div style="display:flex;align-items:center;gap:9px;"><span style="color:var(--gr);font-size:16px;">✓</span><span style="color:var(--t2);">Velocidad dentro del límite</span></div>
+            <div style="display:flex;align-items:center;gap:9px;"><span style="color:var(--gr);font-size:16px;">✓</span><span style="color:var(--t2);">Señal de prioridad respetada</span></div>
+            <div style="display:flex;align-items:center;gap:9px;"><span style="color:var(--yl);font-size:16px;">⚠</span><span style="color:var(--t2);">Peatón a 8m — reducir vel.</span></div>
+            <div style="display:flex;align-items:center;gap:9px;"><span style="color:var(--ac);font-size:16px;">→</span><span style="color:var(--t2);">Semáforo en ROJO — detener</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-h"><div class="card-t">Puntaje en vivo</div></div>
+        <div class="card-b" style="text-align:center;padding:20px;">
+          <div style="font-size:50px;font-weight:900;color:var(--ac);line-height:1;">88%</div>
+          <div style="font-size:12px;color:var(--t2);margin:6px 0 12px;">Puntaje acumulado</div>
+          <div class="pt-track"><div class="pt-fill bl" style="width:88%;"></div></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-h"><div class="card-t">Mini-mapa</div></div>
+        <div class="card-b" style="padding:0;background:var(--s2);height:110px;position:relative;overflow:hidden;">
+          <svg viewBox="0 0 200 110" style="width:100%;height:100%;opacity:.7">
+            <rect fill="var(--s3)" width="200" height="110"/>
+            <rect x="80" y="0" width="40" height="110" fill="#1a2a1a"/>
+            <rect x="0" y="40" width="200" height="30" fill="#1a2a1a"/>
+            <rect x="95" y="0" width="10" height="110" fill="none" stroke="var(--yl)" stroke-width="1" stroke-dasharray="6,6"/>
+            <rect x="0" y="50" width="200" height="10" fill="none" stroke="var(--yl)" stroke-width="1" stroke-dasharray="6,6"/>
+            <circle cx="100" cy="55" r="5" fill="var(--ac)"/>
+          </svg>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-h"><div class="card-t">Estadísticas</div></div>
+        <div class="card-b">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;font-size:12px;">
+            <div style="text-align:center;padding:8px;background:var(--s2);border-radius:8px;"><div style="font-size:20px;font-weight:800;">0</div><div style="color:var(--t3);font-size:10px;">Colisiones</div></div>
+            <div style="text-align:center;padding:8px;background:var(--s2);border-radius:8px;"><div style="font-size:20px;font-weight:800;">0</div><div style="color:var(--t3);font-size:10px;">Infracciones</div></div>
+            <div style="text-align:center;padding:8px;background:var(--s2);border-radius:8px;"><div style="font-size:20px;font-weight:800;">42</div><div style="color:var(--t3);font-size:10px;">km/h actual</div></div>
+            <div style="text-align:center;padding:8px;background:var(--s2);border-radius:8px;"><div style="font-size:20px;font-weight:800;">50</div><div style="color:var(--t3);font-size:10px;">km/h límite</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+</div>
+</div>
+
+<!-- ================================================================
+     RESULTADO / RETROALIMENTACIÓN
+================================================================ -->
+<div id="screen-resultado" class="screen">
+<div class="shell">
+<aside class="sidebar">
+  <div class="sb-logo"><div class="sb-logo-wrap"><div class="sb-icon">🚗</div><div><div class="sb-name">Simulador Vial</div><div class="sb-sub">UTEQ · Software</div></div></div></div>
+  <div class="sb-section"><div class="sb-section-lbl">Principal</div>
+    <div class="sb-item" onclick="ir('dashboard')"><span class="sb-item-icon">⊞</span> Dashboard</div>
+    <div class="sb-item" onclick="ir('escenario')"><span class="sb-item-icon">🗺</span> Nueva práctica</div>
+    <div class="sb-item on"><span class="sb-item-icon">📋</span> Último informe</div>
+    <div class="sb-item" onclick="ir('metricas')"><span class="sb-item-icon">📊</span> Mis métricas</div>
+  </div>
+  <div class="sb-user"><div class="avatar">CV</div><div class="u-info"><div class="u-name">Carlos Vera</div><div class="u-role">Aprendiz · Nv. 2</div></div></div>
+</aside>
+<main class="main">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:26px;">
+    <div><div class="pt">Resultado de Práctica</div><div class="ps">Zona Urbana · 20 Nov 2025 · Sesión #12</div></div>
+    <div style="display:flex;gap:8px;">
+      <button class="btn btn-g btn-sm">⬇ Exportar PDF</button>
+      <button class="btn btn-p" onclick="ir('escenario')">▶ Nueva práctica</button>
+    </div>
+  </div>
+
+  <div class="g2 mb">
+    <div class="card">
+      <div class="card-h"><div class="card-t">Puntuación global</div></div>
+      <div class="card-b">
+        <div class="donut-wrap">
+          <svg width="150" height="150" viewBox="0 0 150 150">
+            <circle cx="75" cy="75" r="62" fill="none" stroke="var(--s3)" stroke-width="11"/>
+            <circle cx="75" cy="75" r="62" fill="none" stroke="var(--ac)" stroke-width="11"
+              stroke-linecap="round" stroke-dasharray="389.6" stroke-dashoffset="70.1"
+              transform="rotate(-90 75 75)" style="filter:drop-shadow(0 0 8px var(--ac));"/>
+          </svg>
+          <div class="donut-text"><div class="donut-val">82%</div><div class="donut-lbl">Desempeño</div></div>
+        </div>
+        <div style="text-align:center;"><span class="chip chip-g" style="font-size:13px;padding:5px 16px;">⭐ BUENO</span></div>
+        <div style="text-align:center;margin-top:10px;font-size:12px;color:var(--t2);">+8 XP ganados · Racha: 4 días</div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-h"><div class="card-t">Resumen de sesión</div></div>
+      <div class="card-b">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;">
+          <div style="background:var(--s2);border-radius:var(--r2);padding:12px;text-align:center;"><div style="font-size:18px;font-weight:800;">5:12</div><div style="font-size:10px;color:var(--t3);">Duración</div></div>
+          <div style="background:var(--s2);border-radius:var(--r2);padding:12px;text-align:center;"><div style="font-size:18px;font-weight:800;color:var(--yl);">2</div><div style="font-size:10px;color:var(--t3);">Infracciones</div></div>
+          <div style="background:var(--s2);border-radius:var(--r2);padding:12px;text-align:center;"><div style="font-size:18px;font-weight:800;color:var(--gr);">8/10</div><div style="font-size:10px;color:var(--t3);">Señales resp.</div></div>
+          <div style="background:var(--s2);border-radius:var(--r2);padding:12px;text-align:center;"><div style="font-size:18px;font-weight:800;">54</div><div style="font-size:10px;color:var(--t3);">km/h máx.</div></div>
+        </div>
+        <div class="m-row"><div class="m-lbl">Seguridad vial</div><div class="m-trk"><div class="pt-track"><div class="pt-fill gn" style="width:88%;"></div></div></div><div class="m-val" style="color:var(--gr);">88%</div></div>
+        <div class="m-row"><div class="m-lbl">Respeto señales</div><div class="m-trk"><div class="pt-track"><div class="pt-fill yl" style="width:75%;"></div></div></div><div class="m-val" style="color:var(--yl);">75%</div></div>
+        <div class="m-row"><div class="m-lbl">Tiempo de reacción</div><div class="m-trk"><div class="pt-track"><div class="pt-fill bl" style="width:80%;"></div></div></div><div class="m-val" style="color:var(--ac);">80%</div></div>
+        <div class="m-row"><div class="m-lbl">Control velocidad</div><div class="m-trk"><div class="pt-track"><div class="pt-fill gn" style="width:92%;"></div></div></div><div class="m-val" style="color:var(--gr);">92%</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card mb">
+    <div class="card-h"><div class="card-t">Retroalimentación educativa</div><span class="tag">Generada por IA</span></div>
+    <div class="card-b">
+      <div class="fb-item"><div class="fb-ico warn">⚠</div><div><div class="fb-t" style="color:var(--yl);">Señal de ceda el paso ignorada</div><div class="fb-d">Se detectó omisión de señal de ceda el paso en la intersección del Km 2. Revisa el artículo 142 del Reglamento de Tránsito. Practica el módulo de señales en Teoría.</div></div></div>
+      <div class="fb-item"><div class="fb-ico err">⚡</div><div><div class="fb-t" style="color:var(--rd);">Invasión de carril en curva cerrada</div><div class="fb-d">En el tramo 3 el vehículo invadió brevemente el carril contrario. Se recomienda el escenario "Manejo de curvas básico" para practicar el trazado correcto.</div></div></div>
+      <div class="fb-item"><div class="fb-ico ok">✓</div><div><div class="fb-t" style="color:var(--gr);">Excelente control de velocidad</div><div class="fb-d">Mantuviste la velocidad dentro del límite el 94% del trayecto. Considera avanzar al nivel Intermedio para un mayor desafío.</div></div></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-h"><div class="card-t">Insignia desbloqueada</div></div>
+    <div class="card-b" style="display:flex;align-items:center;gap:16px;">
+      <div style="font-size:48px;filter:drop-shadow(0 0 12px rgba(245,196,48,.4));">⭐</div>
+      <div>
+        <div style="font-size:16px;font-weight:800;margin-bottom:4px;">¡Sesión completada!</div>
+        <div style="font-size:12px;color:var(--t2);">Has completado tu 12va sesión. ¡Solo 3 más para desbloquear la insignia "10 prácticas"!</div>
+      </div>
+    </div>
+  </div>
+</main>
+</div>
+</div>
+
+<!-- ================================================================
+     REPLAY DE SESIÓN
+================================================================ -->
+<div id="screen-replay" class="screen">
+<div class="shell">
+<aside class="sidebar">
+  <div class="sb-logo"><div class="sb-logo-wrap"><div class="sb-icon">🚗</div><div><div class="sb-name">Simulador Vial</div><div class="sb-sub">UTEQ · Software</div></div></div></div>
+  <div class="sb-section"><div class="sb-section-lbl">Principal</div>
+    <div class="sb-item" onclick="ir('dashboard')"><span class="sb-item-icon">⊞</span> Dashboard</div>
+    <div class="sb-item on"><span class="sb-item-icon">▶</span> Replay de sesión</div>
+    <div class="sb-item" onclick="ir('resultado')"><span class="sb-item-icon">📋</span> Ver informe</div>
+  </div>
+  <div class="sb-user"><div class="avatar">CV</div><div class="u-info"><div class="u-name">Carlos Vera</div><div class="u-role">Aprendiz · Nv. 2</div></div></div>
+</aside>
+<main class="main">
+  <div class="ph"><div class="pt">Replay de Sesión</div><div class="ps">Revisión detallada de tu práctica · Zona Urbana · 20 Nov 2025</div></div>
+
+  <div class="card mb">
+    <div class="card-b" style="padding:10px 18px;">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px;">
+        <button class="btn btn-p btn-sm">▶ Reproducir</button>
+        <button class="btn btn-g btn-sm">⏸ Pausa</button>
+        <span style="font-size:12px;color:var(--t2);font-family:var(--mono);">02:34 / 05:12</span>
+        <div style="margin-left:auto;display:flex;gap:6px;align-items:center;">
+          <span style="font-size:11px;color:var(--t3);">Velocidad:</span>
+          <button class="btn btn-g btn-sm">0.5×</button>
+          <button class="btn btn-p btn-sm">1×</button>
+          <button class="btn btn-g btn-sm">2×</button>
+        </div>
+      </div>
+      <div class="replay-tl">
+        <div class="replay-prog"></div>
+        <div class="replay-head"></div>
+        <div style="position:absolute;left:35%;top:-6px;width:4px;height:20px;background:var(--yl);border-radius:2px;" title="Infracción 1"></div>
+        <div style="position:absolute;left:60%;top:-6px;width:4px;height:20px;background:var(--rd);border-radius:2px;" title="Infracción 2"></div>
+      </div>
+      <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--t3);margin-top:4px;font-family:var(--mono);">
+        <span>00:00</span><span>01:18</span><span>02:36</span><span>03:54</span><span>05:12</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="g2 mb">
+    <div class="card">
+      <div class="card-b" style="padding:0;background:var(--s2);">
+        <div class="sim-vp" style="height:240px;">
+          <div class="sim-sky"></div>
+          <div class="sim-ground"></div>
+          <div class="sim-road-wrap"><div class="sim-road"></div><div class="sim-dashes"></div></div>
+          <div class="sim-tl"><div class="tl r"></div><div class="tl y on"></div><div class="tl g"></div></div>
+          <div class="sim-car-w" style="animation:none;bottom:32px;">🚗</div>
+          <div class="sim-hud-l">
+            <div class="hud-pill"><span class="hud-val">47</span><span class="hud-lbl">km/h</span></div>
+          </div>
+          <div class="hud-pill" style="position:absolute;bottom:10px;left:50%;transform:translateX(-50%);">⚠ Evento detectado en 02:34</div>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-h"><div class="card-t">Eventos de la sesión</div></div>
+      <div class="card-b" style="padding:0;">
+        <div style="padding:12px 16px;border-bottom:1px solid var(--b1);display:flex;gap:12px;cursor:pointer;" class="">
+          <span style="font-family:var(--mono);font-size:11px;color:var(--t3);width:40px;">01:18</span>
+          <span class="chip chip-y" style="font-size:10px;">⚠ Señal ignorada</span>
+        </div>
+        <div style="padding:12px 16px;border-bottom:1px solid var(--b1);display:flex;gap:12px;background:rgba(56,139,255,.05);">
+          <span style="font-family:var(--mono);font-size:11px;color:var(--ac);width:40px;">02:34</span>
+          <span class="chip chip-r" style="font-size:10px;">⚡ Invasión de carril</span>
+        </div>
+        <div style="padding:12px 16px;border-bottom:1px solid var(--b1);display:flex;gap:12px;">
+          <span style="font-family:var(--mono);font-size:11px;color:var(--t3);width:40px;">03:10</span>
+          <span class="chip chip-g" style="font-size:10px;">✓ Cruce correcto</span>
+        </div>
+        <div style="padding:12px 16px;display:flex;gap:12px;">
+          <span style="font-family:var(--mono);font-size:11px;color:var(--t3);width:40px;">04:45</span>
+          <span class="chip chip-g" style="font-size:10px;">✓ Frenado de emergencia ok</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+</div>
+</div>
+
+<!-- ================================================================
+     MÉTRICAS
+================================================================ -->
+<div id="screen-metricas" class="screen">
+<div class="shell">
+<aside class="sidebar">
+  <div class="sb-logo"><div class="sb-logo-wrap"><div class="sb-icon">🚗</div><div><div class="sb-name">Simulador Vial</div><div class="sb-sub">UTEQ · Software</div></div></div></div>
+  <div class="sb-section"><div class="sb-section-lbl">Principal</div>
+    <div class="sb-item" onclick="ir('dashboard')"><span class="sb-item-icon">⊞</span> Dashboard</div>
+    <div class="sb-item" onclick="ir('escenario')"><span class="sb-item-icon">🗺</span> Nueva práctica</div>
+    <div class="sb-item" onclick="ir('teoria')"><span class="sb-item-icon">📖</span> Teoría vial</div>
+    <div class="sb-item on"><span class="sb-item-icon">📊</span> Mis métricas</div>
+  </div>
+  <div class="sb-user"><div class="avatar">CV</div><div class="u-info"><div class="u-name">Carlos Vera</div><div class="u-role">Aprendiz · Nv. 2</div></div></div>
+</aside>
+<main class="main">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:26px;">
+    <div><div class="pt">Mis Métricas</div><div class="ps">Historial completo de desempeño y logros</div></div>
+    <button class="btn btn-g btn-sm">⬇ Exportar reporte</button>
+  </div>
+
+  <div class="card mb">
+    <div class="card-h"><div class="card-t">Evolución del puntaje — últimas 6 sesiones</div></div>
+    <div class="card-b chart-wrap">
+      <svg viewBox="0 0 620 130" xmlns="http://www.w3.org/2000/svg" style="width:100%;overflow:visible;">
+        <defs><linearGradient id="cg" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#388bff" stop-opacity=".3"/><stop offset="100%" stop-color="#388bff" stop-opacity="0"/></linearGradient></defs>
+        <line x1="40" y1="10" x2="600" y2="10" stroke="rgba(56,139,255,.07)" stroke-width="1"/>
+        <line x1="40" y1="40" x2="600" y2="40" stroke="rgba(56,139,255,.07)" stroke-width="1"/>
+        <line x1="40" y1="70" x2="600" y2="70" stroke="rgba(56,139,255,.07)" stroke-width="1"/>
+        <line x1="40" y1="100" x2="600" y2="100" stroke="rgba(56,139,255,.07)" stroke-width="1"/>
+        <text x="32" y="13" font-size="9" fill="var(--t3)" text-anchor="end">100%</text>
+        <text x="32" y="43" font-size="9" fill="var(--t3)" text-anchor="end">75%</text>
+        <text x="32" y="73" font-size="9" fill="var(--t3)" text-anchor="end">50%</text>
+        <text x="32" y="103" font-size="9" fill="var(--t3)" text-anchor="end">25%</text>
+        <polygon points="90,72 170,60 260,56 350,50 450,44 560,37 560,100 90,100" fill="url(#cg)"/>
+        <polyline points="90,72 170,60 260,56 350,50 450,44 560,37" fill="none" stroke="var(--ac)" stroke-width="2.5" stroke-linejoin="round"/>
+        <circle cx="90" cy="72" r="4" fill="var(--ac)"/><circle cx="170" cy="60" r="4" fill="var(--ac)"/>
+        <circle cx="260" cy="56" r="4" fill="var(--ac)"/><circle cx="350" cy="50" r="4" fill="var(--ac)"/>
+        <circle cx="450" cy="44" r="4" fill="var(--ac)"/>
+        <circle cx="560" cy="37" r="5" fill="var(--ac2)" stroke="#fff" stroke-width="2"/>
+        <text x="90" y="120" font-size="9" fill="var(--t3)" text-anchor="middle">Nov 1</text>
+        <text x="170" y="120" font-size="9" fill="var(--t3)" text-anchor="middle">Nov 5</text>
+        <text x="260" y="120" font-size="9" fill="var(--t3)" text-anchor="middle">Nov 10</text>
+        <text x="350" y="120" font-size="9" fill="var(--t3)" text-anchor="middle">Nov 14</text>
+        <text x="450" y="120" font-size="9" fill="var(--t3)" text-anchor="middle">Nov 18</text>
+        <text x="560" y="120" font-size="9" fill="var(--ac2)" text-anchor="middle">Hoy</text>
+      </svg>
+    </div>
+  </div>
+
+  <div class="g2 mb">
+    <div class="card">
+      <div class="card-h"><div class="card-t">Historial de prácticas</div></div>
+      <div class="card-b" style="padding:0;">
+        <table class="dt">
+          <thead><tr><th>#</th><th>Fecha</th><th>Escenario</th><th>Nivel</th><th>Puntaje</th><th>Duración</th></tr></thead>
+          <tbody>
+            <tr><td>12</td><td>20 Nov</td><td>Zona Urbana</td><td><span class="chip chip-g">Básico</span></td><td style="color:var(--gr);font-weight:700;">82%</td><td>5:12</td></tr>
+            <tr><td>11</td><td>18 Nov</td><td>Cruce</td><td><span class="chip chip-y">Interm.</span></td><td style="color:var(--yl);font-weight:700;">68%</td><td>6:40</td></tr>
+            <tr><td>10</td><td>15 Nov</td><td>Zona Urbana</td><td><span class="chip chip-g">Básico</span></td><td style="color:var(--yl);font-weight:700;">71%</td><td>4:55</td></tr>
+            <tr><td>9</td><td>11 Nov</td><td>Autopista</td><td><span class="chip chip-g">Básico</span></td><td style="color:var(--rd);font-weight:700;">65%</td><td>7:20</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:14px;">
+      <div class="card">
+        <div class="card-h"><div class="card-t">Logros y recompensas</div></div>
+        <div class="card-b">
+          <div class="bdg-grid">
+            <div class="bdg"><span class="bdg-emoji">🏆</span><div class="bdg-name">Primera sesión</div></div>
+            <div class="bdg"><span class="bdg-emoji">⭐</span><div class="bdg-name">5 prácticas</div></div>
+            <div class="bdg"><span class="bdg-emoji">🚦</span><div class="bdg-name">Sin infracciones</div></div>
+            <div class="bdg lk"><span class="bdg-emoji">🔒</span><div class="bdg-name">10 prácticas</div></div>
+            <div class="bdg lk"><span class="bdg-emoji">🔒</span><div class="bdg-name">Puntaje ≥90%</div></div>
+            <div class="bdg lk"><span class="bdg-emoji">🔒</span><div class="bdg-name">Nivel Avanzado</div></div>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-h"><div class="card-t">Ranking semanal</div></div>
+        <div class="card-b">
+          <div class="lb-row"><div class="lb-pos">🥇</div><div class="lb-av" style="background:linear-gradient(135deg,var(--yl),#ff8);">AL</div><div class="lb-name">Ana López <span>12 prácticas</span></div><div class="lb-score">91%</div></div>
+          <div class="lb-row" style="background:rgba(56,139,255,.05);border-radius:8px;"><div class="lb-pos">🥈</div><div class="lb-av" style="background:linear-gradient(135deg,var(--ac),var(--gr));">CV</div><div class="lb-name"><strong>Carlos Vera</strong> <span>Tú · 12 prácticas</span></div><div class="lb-score">82%</div></div>
+          <div class="lb-row"><div class="lb-pos">🥉</div><div class="lb-av" style="background:linear-gradient(135deg,var(--pu),var(--rd));">PM</div><div class="lb-name">Pedro Muñoz <span>8 prácticas</span></div><div class="lb-score">78%</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+</div>
+</div>
+
+<!-- ================================================================
+     PERFIL
+================================================================ -->
+<div id="screen-perfil" class="screen">
+<div class="shell">
+<aside class="sidebar">
+  <div class="sb-logo"><div class="sb-logo-wrap"><div class="sb-icon">🚗</div><div><div class="sb-name">Simulador Vial</div><div class="sb-sub">UTEQ · Software</div></div></div></div>
+  <div class="sb-section"><div class="sb-section-lbl">Cuenta</div>
+    <div class="sb-item on"><span class="sb-item-icon">👤</span> Mi perfil</div>
+    <div class="sb-item" onclick="ir('dashboard')"><span class="sb-item-icon">⊞</span> Dashboard</div>
+    <div class="sb-item" onclick="ir('notif')"><span class="sb-item-icon">🔔</span> Notificaciones</div>
+  </div>
+  <div class="sb-user"><div class="avatar">CV</div><div class="u-info"><div class="u-name">Carlos Vera</div><div class="u-role">Aprendiz · Nv. 2</div></div></div>
+</aside>
+<main class="main">
+  <div class="ph"><div class="pt">Mi Perfil</div><div class="ps">Gestiona tu información y preferencias</div></div>
+
+  <div class="card mb">
+    <div class="card-b" style="display:flex;align-items:center;gap:20px;">
+      <div style="width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,var(--ac),var(--gr));display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:800;border:3px solid var(--b2);box-shadow:0 0 20px var(--b2);">CV</div>
+      <div>
+        <div style="font-size:20px;font-weight:800;margin-bottom:4px;">Carlos Daniel Vera Sánchez</div>
+        <div style="font-size:12px;color:var(--t2);margin-bottom:8px;">carlos.vera@uteq.edu.ec</div>
+        <div style="display:flex;gap:8px;"><span class="chip chip-b">Nv. 2 · Conductor Básico</span><span class="chip chip-g">4 días de racha 🔥</span></div>
+      </div>
+      <button class="btn btn-g btn-sm" style="margin-left:auto;">✎ Editar foto</button>
+    </div>
+  </div>
+
+  <div class="g2 mb">
+    <div class="card">
+      <div class="card-h"><div class="card-t">Información personal</div></div>
+      <div class="card-b">
+        <div class="fg"><label class="fl">Nombre completo</label><input class="fi" value="Carlos Daniel Vera Sánchez"/></div>
+        <div class="fg"><label class="fl">Correo electrónico</label><input class="fi" value="carlos.vera@uteq.edu.ec"/></div>
+        <div class="fg"><label class="fl">Rol en el sistema</label><input class="fi" value="Aprendiz" disabled style="opacity:.5;cursor:not-allowed;"/></div>
+        <button class="btn btn-p">Guardar cambios</button>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-h"><div class="card-t">Estadísticas del perfil</div></div>
+      <div class="card-b">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;">
+          <div style="background:var(--s2);border-radius:var(--r2);padding:14px;text-align:center;"><div style="font-size:22px;font-weight:800;color:var(--ac);">12</div><div style="font-size:11px;color:var(--t3);">Prácticas totales</div></div>
+          <div style="background:var(--s2);border-radius:var(--r2);padding:14px;text-align:center;"><div style="font-size:22px;font-weight:800;color:var(--gr);">1h 45m</div><div style="font-size:11px;color:var(--t3);">Tiempo de práctica</div></div>
+          <div style="background:var(--s2);border-radius:var(--r2);padding:14px;text-align:center;"><div style="font-size:22px;font-weight:800;color:var(--yl);">82%</div><div style="font-size:11px;color:var(--t3);">Mejor puntaje</div></div>
+          <div style="background:var(--s2);border-radius:var(--r2);padding:14px;text-align:center;"><div style="font-size:22px;font-weight:800;color:var(--pu);">2/5</div><div style="font-size:11px;color:var(--t3);">Nivel de teoría</div></div>
+        </div>
+        <div class="fg"><label class="fl">Contraseña actual</label><input class="fi" type="password" placeholder="••••••••"/></div>
+        <div class="fg"><label class="fl">Nueva contraseña</label><input class="fi" type="password" placeholder="••••••••"/></div>
+        <button class="btn btn-s">Cambiar contraseña</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-h"><div class="card-t">Certificado de progreso</div></div>
+    <div class="card-b" style="display:flex;align-items:center;gap:16px;">
+      <div style="font-size:48px;">🎓</div>
+      <div style="flex:1;">
+        <div style="font-size:14px;font-weight:700;margin-bottom:4px;">Certificado de conducción simulada — Nivel Básico</div>
+        <div style="font-size:12px;color:var(--t2);">Disponible al alcanzar el 80% promedio con 15+ prácticas. Te faltan 3 sesiones más.</div>
+        <div class="pt-track" style="margin-top:8px;"><div class="pt-fill bl" style="width:80%;"></div></div>
+      </div>
+      <button class="btn btn-g btn-sm" disabled style="opacity:.4;">⬇ Descargar</button>
+    </div>
+  </div>
+</main>
+</div>
+</div>
+
+<!-- ================================================================
+     NOTIFICACIONES
+================================================================ -->
+<div id="screen-notif" class="screen">
+<div class="shell">
+<aside class="sidebar">
+  <div class="sb-logo"><div class="sb-logo-wrap"><div class="sb-icon">🚗</div><div><div class="sb-name">Simulador Vial</div><div class="sb-sub">UTEQ · Software</div></div></div></div>
+  <div class="sb-section"><div class="sb-section-lbl">Cuenta</div>
+    <div class="sb-item" onclick="ir('dashboard')"><span class="sb-item-icon">⊞</span> Dashboard</div>
+    <div class="sb-item on"><span class="sb-item-icon">🔔</span> Notificaciones</div>
+    <div class="sb-item" onclick="ir('perfil')"><span class="sb-item-icon">👤</span> Mi perfil</div>
+  </div>
+  <div class="sb-user"><div class="avatar">CV</div><div class="u-info"><div class="u-name">Carlos Vera</div><div class="u-role">Aprendiz · Nv. 2</div></div></div>
+</aside>
+<main class="main">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:26px;">
+    <div><div class="pt">Notificaciones</div><div class="ps">Tus alertas y novedades recientes</div></div>
+    <button class="btn btn-g btn-sm">Marcar todo como leído</button>
+  </div>
+  <div class="card">
+    <div class="card-b">
+      <div class="n-item unread"><div class="n-ico">🏅</div><div class="n-text">¡Obtuviste la insignia <strong>"Sin infracciones"</strong>! Completaste una práctica sin ninguna falla de tránsito.</div><div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;"><div class="n-time">Hoy</div><div class="n-dot"></div></div></div>
+      <div class="n-item unread"><div class="n-ico">📈</div><div class="n-text">Tu puntaje promedio subió al <strong>74%</strong>. ¡Mejora del 8% respecto a la semana pasada! Sigue practicando para alcanzar el 80%.</div><div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;"><div class="n-time">Ayer</div><div class="n-dot"></div></div></div>
+      <div class="n-item"><div class="n-ico">📖</div><div class="n-text">Nuevo módulo disponible: <strong>"Señales en zona escolar"</strong>. Complétalo antes de tu próxima práctica avanzada.</div><div class="n-time">18 Nov</div></div>
+      <div class="n-item"><div class="n-ico">👨‍🏫</div><div class="n-text">Tu instructor <strong>Pedro Muñoz</strong> revisó tu sesión #11 y dejó comentarios sobre tu manejo en curvas.</div><div class="n-time">17 Nov</div></div>
+      <div class="n-item"><div class="n-ico">🚗</div><div class="n-text">Nuevo escenario desbloqueado: <strong>Conducción nocturna</strong>. ¡Ya puedes acceder desde el catálogo de prácticas!</div><div class="n-time">15 Nov</div></div>
+    </div>
+  </div>
+</main>
+</div>
+</div>
+
+<!-- ================================================================
+     VISTA INSTRUCTOR
+================================================================ -->
+<div id="screen-instructor" class="screen">
+<div class="shell">
+<aside class="sidebar">
+  <div class="sb-logo"><div class="sb-logo-wrap"><div class="sb-icon">🎓</div><div><div class="sb-name">Panel Instructor</div><div class="sb-sub">UTEQ · Software</div></div></div></div>
+  <div class="sb-section"><div class="sb-section-lbl">Instructor</div>
+    <div class="sb-item on"><span class="sb-item-icon">👥</span> Mis estudiantes</div>
+    <div class="sb-item"><span class="sb-item-icon">📋</span> Revisiones pendientes</div>
+    <div class="sb-item"><span class="sb-item-icon">📊</span> Estadísticas generales</div>
+    <div class="sb-item"><span class="sb-item-icon">📨</span> Mensajes</div>
+  </div>
+  <div class="sb-user"><div class="avatar" style="background:linear-gradient(135deg,var(--gr),var(--ac));">PM</div><div class="u-info"><div class="u-name">Pedro Muñoz</div><div class="u-role">Instructor</div></div></div>
+</aside>
+<main class="main">
+  <div class="ph"><div class="pt">Panel del Instructor</div><div class="ps">Supervisa el progreso de tus estudiantes</div></div>
+
+  <div class="stats" style="grid-template-columns:repeat(3,1fr);margin-bottom:18px;">
+    <div class="sc bl"><div class="sc-icon">👥</div><div class="sc-val">8</div><div class="sc-lbl">Estudiantes activos</div></div>
+    <div class="sc yl"><div class="sc-icon">📋</div><div class="sc-val">5</div><div class="sc-lbl">Revisiones pendientes</div></div>
+    <div class="sc gn"><div class="sc-icon">📈</div><div class="sc-val">74%</div><div class="sc-lbl">Promedio del grupo</div></div>
+  </div>
+
+  <div class="g2 mb">
+    <div class="card">
+      <div class="card-h"><div class="card-t">Estudiantes asignados</div></div>
+      <div class="card-b" style="padding:0;">
+        <table class="dt">
+          <thead><tr><th>Estudiante</th><th>Nivel</th><th>Prácticas</th><th>Promedio</th></tr></thead>
+          <tbody>
+            <tr><td><div style="display:flex;align-items:center;gap:8px;"><div class="avatar" style="width:24px;height:24px;font-size:10px;">CV</div>Carlos Vera</div></td><td><span class="chip chip-b">Básico</span></td><td>12</td><td style="color:var(--gr);font-weight:700;">82%</td></tr>
+            <tr><td><div style="display:flex;align-items:center;gap:8px;"><div class="avatar" style="width:24px;height:24px;font-size:10px;background:linear-gradient(135deg,var(--yl),var(--rd));">AL</div>Ana López</div></td><td><span class="chip chip-y">Intermedio</span></td><td>18</td><td style="color:var(--ac);font-weight:700;">91%</td></tr>
+            <tr><td><div style="display:flex;align-items:center;gap:8px;"><div class="avatar" style="width:24px;height:24px;font-size:10px;background:linear-gradient(135deg,var(--pu),var(--ac));">JM</div>Juan Mora</div></td><td><span class="chip chip-g">Básico</span></td><td>5</td><td style="color:var(--rd);font-weight:700;">58%</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-h"><div class="card-t">Revisiones pendientes</div></div>
+      <div class="card-b">
+        <div class="review-card">
+          <div class="rv-head">
+            <div class="avatar" style="width:28px;height:28px;font-size:11px;">CV</div>
+            <div><div class="rv-student">Carlos Vera — Sesión #12</div><div class="rv-date">20 Nov 2025 · Zona Urbana · 82%</div></div>
+            <span class="chip chip-y" style="margin-left:auto;">Pendiente</span>
+          </div>
+          <div class="rv-body">Pendiente de revisión del evento en curva (02:34). El alumno invadió el carril contrario brevemente. Revisar replay antes de comentar.</div>
+          <div class="rv-actions">
+            <button class="btn btn-s btn-sm" onclick="ir('replay')">▶ Ver replay</button>
+            <button class="btn btn-gr btn-sm">✓ Aprobar</button>
+            <button class="btn btn-g btn-sm">✏ Comentar</button>
+          </div>
+        </div>
+        <div class="review-card">
+          <div class="rv-head">
+            <div class="avatar" style="width:28px;height:28px;font-size:11px;background:linear-gradient(135deg,var(--pu),var(--ac));">JM</div>
+            <div><div class="rv-student">Juan Mora — Sesión #5</div><div class="rv-date">18 Nov 2025 · Autopista · 58%</div></div>
+            <span class="chip chip-r" style="margin-left:auto;">Urgente</span>
+          </div>
+          <div class="rv-body">Puntaje muy bajo. Se detectaron 6 infracciones en 7 minutos. Se recomienda retomar teoría antes de continuar con prácticas.</div>
+          <div class="rv-actions">
+            <button class="btn btn-s btn-sm">▶ Ver replay</button>
+            <button class="btn btn-rd btn-sm">⚠ Requiere atención</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+</div>
+</div>
+
+<!-- ================================================================
+     ADMIN
+================================================================ -->
+<div id="screen-admin" class="screen">
+<div class="shell">
+<aside class="sidebar">
+  <div class="sb-logo"><div class="sb-logo-wrap"><div class="sb-icon">⚙</div><div><div class="sb-name">Administración</div><div class="sb-sub">Acceso total</div></div></div></div>
+  <div class="sb-section"><div class="sb-section-lbl">Administración</div>
+    <div class="sb-item on"><span class="sb-item-icon">👥</span> Gestionar usuarios</div>
+    <div class="sb-item"><span class="sb-item-icon">🗺</span> Configurar escenarios</div>
+    <div class="sb-item"><span class="sb-item-icon">📋</span> Reglas de tránsito</div>
+    <div class="sb-item"><span class="sb-item-icon">📈</span> Estadísticas globales</div>
+    <div class="sb-item"><span class="sb-item-icon">🤖</span> Módulo IA</div>
+  </div>
+  <div class="sb-user"><div class="avatar admin">AD</div><div class="u-info"><div class="u-name">Administrador</div><div class="u-role">Acceso completo</div></div></div>
+</aside>
+<main class="main">
+  <div class="ph"><div class="pt">Panel de Administración</div><div class="ps">Configuración y gestión del sistema</div></div>
+
+  <div class="stats">
+    <div class="sc bl"><div class="sc-icon">👥</div><div class="sc-val">24</div><div class="sc-lbl">Usuarios registrados</div><div class="sc-delta up">↑ 3 nuevos esta semana</div></div>
+    <div class="sc gn"><div class="sc-icon">🗺</div><div class="sc-val">6</div><div class="sc-lbl">Escenarios activos</div><div class="sc-delta neu">2 en desarrollo</div></div>
+    <div class="sc yl"><div class="sc-icon">📋</div><div class="sc-val">18</div><div class="sc-lbl">Normativas activas</div><div class="sc-delta neu">Actualizado Nov 2025</div></div>
+    <div class="sc pu"><div class="sc-icon">🤖</div><div class="sc-val">99.2%</div><div class="sc-lbl">Precisión del modelo IA</div><div class="sc-delta up">↑ último entrenamiento</div></div>
+  </div>
+
+  <div class="card mb">
+    <div class="card-h"><div class="card-t">Gestión de usuarios</div><button class="btn btn-p btn-sm">+ Nuevo usuario</button></div>
+    <div class="card-b">
+      <div class="fg"><input class="fi" placeholder="🔍 Buscar por nombre, correo o rol..."/></div>
+      <table class="dt">
+        <thead><tr><th>Nombre</th><th>Rol</th><th>Prácticas</th><th>Último acceso</th><th>Estado</th><th></th></tr></thead>
+        <tbody>
+          <tr>
+            <td><div style="display:flex;align-items:center;gap:10px;"><div class="avatar" style="width:28px;height:28px;font-size:11px;">CV</div><div><div style="font-size:13px;font-weight:600;">Carlos Vera</div><div style="font-size:11px;color:var(--t3);">carlos.vera@uteq.edu.ec</div></div></div></td>
+            <td><span class="chip chip-b">Aprendiz</span></td><td>12</td><td>Hoy</td><td><span class="chip chip-g">Activo</span></td>
+            <td><div style="display:flex;gap:4px;"><button class="btn btn-g btn-sm">✎</button><button class="btn btn-rd btn-sm">✕</button></div></td>
+          </tr>
+          <tr>
+            <td><div style="display:flex;align-items:center;gap:10px;"><div class="avatar" style="width:28px;height:28px;font-size:11px;background:linear-gradient(135deg,var(--yl),var(--rd));">AL</div><div><div style="font-size:13px;font-weight:600;">Ana López</div><div style="font-size:11px;color:var(--t3);">ana.lopez@uteq.edu.ec</div></div></div></td>
+            <td><span class="chip chip-b">Aprendiz</span></td><td>18</td><td>Ayer</td><td><span class="chip chip-g">Activo</span></td>
+            <td><div style="display:flex;gap:4px;"><button class="btn btn-g btn-sm">✎</button><button class="btn btn-rd btn-sm">✕</button></div></td>
+          </tr>
+          <tr>
+            <td><div style="display:flex;align-items:center;gap:10px;"><div class="avatar" style="width:28px;height:28px;font-size:11px;background:linear-gradient(135deg,var(--gr),var(--ac));">PM</div><div><div style="font-size:13px;font-weight:600;">Pedro Muñoz</div><div style="font-size:11px;color:var(--t3);">pedro.munoz@uteq.edu.ec</div></div></div></td>
+            <td><span class="chip chip-y">Instructor</span></td><td>—</td><td>Hoy</td><td><span class="chip chip-g">Activo</span></td>
+            <td><div style="display:flex;gap:4px;"><button class="btn btn-g btn-sm">✎</button><button class="btn btn-rd btn-sm">✕</button></div></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="g2">
+    <div class="card">
+      <div class="card-h"><div class="card-t">Configurar escenario</div></div>
+      <div class="card-b">
+        <div class="fg"><label class="fl">Escenario</label><select class="fi"><option>Zona Urbana</option><option>Autopista</option><option>Lluvia y niebla</option><option>Conducción nocturna</option></select></div>
+        <div class="g2">
+          <div class="fg"><label class="fl">Densidad de tráfico</label><input class="fi" placeholder="Alta (80%)"/></div>
+          <div class="fg"><label class="fl">Condición climática</label><input class="fi" placeholder="Soleado"/></div>
+        </div>
+        <div class="fg"><label class="fl">Velocidad máx. permitida (km/h)</label><input class="fi" placeholder="50"/></div>
+        <div class="fg"><label class="fl">Frecuencia de peatones</label><select class="fi"><option>Baja</option><option>Media</option><option>Alta</option></select></div>
+        <button class="btn btn-gr btn-full">✓ Guardar cambios</button>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-h"><div class="card-t">Nueva normativa de tránsito</div></div>
+      <div class="card-b">
+        <div class="fg"><label class="fl">Artículo / Descripción</label><input class="fi" placeholder="Art. 142 — Ceda el paso..."/></div>
+        <div class="fg"><label class="fl">Tipo de infracción</label><select class="fi"><option>Leve</option><option>Grave</option><option>Muy grave</option></select></div>
+        <div class="g2">
+          <div class="fg"><label class="fl">Penalidad (puntos)</label><input class="fi" placeholder="-10"/></div>
+          <div class="fg"><label class="fl">Módulo donde aplica</label><select class="fi"><option>Todos</option><option>Urbano</option><option>Autopista</option></select></div>
+        </div>
+        <div class="fg"><label class="fl">Descripción pedagógica</label><textarea class="fi" placeholder="Explicación educativa para retroalimentar al conductor..." style="resize:vertical;min-height:60px;"></textarea></div>
+        <button class="btn btn-p btn-full">+ Registrar normativa</button>
+      </div>
+    </div>
+  </div>
+</main>
+</div>
+</div>
+
+<div class="pf">
+  PROTOTIPO DE ALTA FIDELIDAD · Simulador de Comportamiento Vial con Inteligencia Artificial<br>
+  Panamá Murillo · Vera Sánchez · Zamora Bumbila — Ingeniería en Software · UTEQ · 2025
+</div>
+
+<script>
+function ir(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.pn').forEach(b=>b.classList.remove('on'));
+  document.getElementById('screen-'+id).classList.add('active');
+  const ids=['onboard','login','dashboard','teoria','escenario','practica','resultado','replay','metricas','perfil','notif','instructor','admin'];
+  const i=ids.indexOf(id);
+  if(i>=0)document.querySelectorAll('.pn')[i].classList.add('on');
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+</script>
+</body>
+</html>
