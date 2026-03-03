@@ -1,0 +1,245 @@
+\documentclass[12pt]{article}
+
+\usepackage[spanish]{babel}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{geometry}
+\usepackage{setspace}
+\usepackage{graphicx}
+\usepackage{longtable}
+\usepackage{hyperref}
+\usepackage{csquotes} % Recomendado para babel + biblatex
+\usepackage{hyperref}
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    urlcolor=blue
+}
+
+
+% Soluciona advertencia: Macro 'volume+number' undefined
+\providecommand*{\bibmacro}[2]{}
+
+\usepackage[style=ieee, doi=true, url=false, backend=biber]{biblatex}
+% --- Mostrar solo DOI limpio y URL si no hay DOI ---
+\usepackage{xpatch}
+
+\DeclareFieldFormat{doi}{%
+  \ifhyperref
+    {\href{https://doi.org/#1}{#1}}%
+    {#1}%
+}
+
+\xpatchbibdriver{article}
+  {\printfield{url}}
+  {\iffieldundef{doi}{\printfield{url}}{}}
+  {}
+  {}
+
+\geometry{margin=2.5cm}
+\onehalfspacing
+
+% Archivo de referencias
+\addbibresource{referencias_scopus.bib}
+
+\begin{document}
+
+\begin{center}
+\textbf{Universidad Técnica Estatal de Quevedo (UTEQ)}\\[1em]
+
+\textbf{PLANIFICACIÓN DEL PROYECTO FINAL}\\[1em]
+
+\textbf{Ingeniería de Requisitos}\\[1em]
+
+\textbf{Grupo A}\\[2em]
+
+Panamá Murillo Moisés Antonio\\
+Vera Sánchez Charly Daniel\\
+Zamora Bumbila Diego Alexander\\[2em]
+
+Noviembre 2025
+\end{center}
+
+\newpage
+\tableofcontents
+\newpage
+
+% ===========================
+\section{Título del Proyecto}
+\textbf {Simulador de Comportamiento Vial con Inteligencia Artificial}
+
+% ===========================
+\section{Objetivo General}
+Diseñar un simulador interactivo web, basado en Inteligencia Artificial, que permita evaluar y mejorar el comportamiento vial de los usuarios en escenarios urbanos reales, promoviendo una educación vial dinámica, contextualizada y orientada al aprendizaje por experiencia.
+
+% ===========================
+\section{Objetivos Específicos}
+\begin{itemize}
+    \item Diseñar un entorno de simulación que reproduzca situaciones viales reales (semáforos, peatones, señales de tránsito, etc.).
+    \item Implementar un modelo de IA capaz de analizar las decisiones del usuario y ofrecer retroalimentación sobre su desempeño vial.
+    \item Integrar un sistema de puntuación y recompensas que motive el aprendizaje mediante técnicas de gamificación.
+    \item Permitir la recopilación de datos de comportamiento para generar métricas de aprendizaje y seguridad vial.
+    \item Desarrollar una versión escalable que pueda integrarse con programas educativos o procesos de obtención de licencias de conducir.
+\end{itemize}
+
+% ===========================
+\section{Descripción del Sistema y del Problema}
+La educación vial tradicional se basa principalmente en contenidos teóricos, sin que los usuarios experimenten de manera práctica las consecuencias de sus decisiones en la vía pública. Esto genera un aprendizaje pasivo y poco contextualizado.
+
+\begin{itemize}
+    \item La falta de experiencias reales en la formación vial dificulta la interiorización de normas de tránsito.
+    \item Los jóvenes presentan mayor riesgo de accidentes por escasa práctica en situaciones críticas.
+    \item Los métodos actuales no aprovechan herramientas tecnológicas inmersivas ni la inteligencia artificial como apoyo pedagógico.
+\end{itemize}
+
+Estudios recientes demuestran la efectividad de los simuladores inteligentes para analizar el comportamiento de los conductores en escenarios de riesgo y prevenir accidentes mediante modelos predictivos. Por ejemplo, en \cite{Shirole2025} se presenta una revisión exhaustiva sobre el uso de modelos basados en datos para analizar el comportamiento del conductor y desarrollar sistemas inteligentes de evaluación. 
+
+De manera complementaria, en \cite{Harb2025} y \cite{Almodhwahi2025} se proponen sistemas de monitoreo de somnolencia y seguridad del conductor utilizando inteligencia artificial en tiempo real. Asimismo, investigaciones como \cite{Kaselouris202649}, \cite{Nicolosi2025} y \cite{Althabhawee2025317} analizan la influencia de factores externos y patrones de comportamiento mediante técnicas de aprendizaje profundo para mejorar la seguridad vial. 
+
+Finalmente, \cite{Afridi2025} aporta un conjunto de datos multiclase para la detección y clasificación del comportamiento del conductor en entornos simulados, lo cual respalda la pertinencia del desarrollo de un simulador inteligente con fines educativos.
+
+En conjunto, estas investigaciones sustentan la pertinencia del desarrollo de un simulador inteligente con fines educativos, que permita evaluar decisiones viales y generar aprendizajes significativos a través de la retroalimentación automática.
+
+% ===========================
+\section{Actores y Fuentes de Información}
+
+\subsection{Actores del Sistema}
+\begin{itemize}
+    \item \textbf{Usuarios:} Interactúa directamente con el simulador, toma decisiones en escenarios de conducción y recibe retroalimentación inmediata sobre su comportamiento.
+    \item \textbf{Instructor:} Supervisa las prácticas, analiza las métricas de desempeño y colabora en la validación pedagógica de los escenarios.
+    \item \textbf{Administrador:} Configura los escenarios, administra usuarios y niveles de dificultad, además de garantizar el correcto funcionamiento del sistema.
+\end{itemize}
+
+\subsection{Partes Interesadas y Fuentes de Información}
+Durante la fase de \textit{elicitación de requisitos}, se consideran como fuentes principales de información las personas vinculadas al \textbf{Sindicato de Choferes Profesionales de Valencia}, así como documentos y normativas que aportan conocimientos esenciales sobre el contexto de uso, las necesidades funcionales y los lineamientos que debe cumplir el simulador. Estas fuentes permiten comprender de manera integral las condiciones reales de capacitación y las expectativas de los futuros usuarios del sistema.
+
+
+\begin{center}
+\begin{tabular}{|p{5cm}|p{12cm}|}
+\hline
+\textbf{Parte interesada / Fuente} & \textbf{Rol en el proyecto / Aporte al levantamiento de información} \\
+\hline
+Instructores de manejo & Aportan conocimiento experto sobre el proceso de enseñanza y evaluación de conductores. Contribuyen en la definición de escenarios, criterios de retroalimentación, tipos de errores frecuentes y requerimientos pedagógicos del simulador. \\
+\hline
+Usuario conductor & Fuente directa para identificar necesidades de usabilidad, comprensión de la interfaz, retroalimentación visual y elementos motivacionales que fomenten el aprendizaje. \\
+\hline
+Leyes y reglamentos de tránsito vigentes & Fuente normativa para la definición de reglas de conducción, infracciones, penalizaciones y comportamientos seguros. Se consideran principalmente la \textit{Ley Orgánica de Transporte Terrestre, Tránsito y Seguridad Vial del Ecuador} y su \textit{Reglamento General de Aplicación}, así como los manuales de la \textit{ANT} (Agencia Nacional de Tránsito) y el \textit{MTOP} (Ministerio de Transporte y Obras Públicas). \\
+\hline
+Secretaría del Sindicato & Proporciona información de carácter administrativo relacionada con los procesos de inscripción, programación de prácticas y coordinación institucional, útil para contextualizar el entorno donde se implementará el simulador. \\
+\hline
+\end{tabular}
+\end{center}
+
+\subsection{Técnicas de Recopilación de Información}
+Para el levantamiento de requerimientos se aplicarán las siguientes técnicas:
+\begin{itemize}
+    \item \textbf{Entrevistas estructuradas y semiestructuradas} con los instructores y usuarios conductores, y en menor medida con la Secretaría del Sindicato.
+    \item \textbf{Observación directa} de prácticas de conducción y comportamientos viales comunes en entornos reales o de instrucción.
+    \item \textbf{Análisis documental} de leyes, reglamentos, manuales y estudios científicos sobre educación vial y simuladores de conducción.
+\end{itemize}
+
+Estas fuentes y técnicas permitirán construir una visión integral del sistema, considerando tanto los aspectos técnicos y pedagógicos como los requerimientos normativos que garanticen la validez del simulador en el contexto ecuatoriano.
+
+% ===========================
+\section{Metodología de Trabajo}
+El proyecto se desarrollará utilizando una metodología ágil, específicamente un enfoque basado en \textbf{Scrum adaptado}, el cual permite una gestión flexible, iterativa e incremental del desarrollo del sistema. Esta metodología facilita la adaptación a cambios en los requisitos y promueve la entrega continua de valor mediante ciclos de desarrollo cortos denominados \textit{sprints}.
+
+Cada sprint tiene una duración de dos semanas (14 semanas) e incluye las fases de análisis, diseño, implementación, pruebas y revisión, asegurando la validación constante de los requisitos con los actores involucrados.
+
+\begin{itemize}
+    \item \textbf{Elicitación y análisis de requisitos:} Se identifica y se da prioridad a los requisitos funcionales y no funcionales del simulador, definiendo el comportamiento esperado de los usuarios y el tipo de retroalimentación generada por el sistema.
+    \item \textbf{Diseño del sistema:} Se modelarán los escenarios viales, las reglas de interacción y los flujos de uso, considerando principios de usabilidad y experiencia de usuario.
+    \item \textbf{Implementación incremental:} Se diseñará progresivamente los módulos del simulador, integrando algoritmos de inteligencia artificial para evaluar las decisiones del usuario y generar puntuaciones y retroalimentación automática.
+    \item \textbf{Pruebas y validación:} Se realizarán pruebas funcionales en cada sprint para verificar el cumplimiento de los requisitos definidos.
+    \item \textbf{Revisión y retroalimentación:} Al finalizar cada sprint, se llevará a cabo una revisión con el equipo y usuarios piloto, permitiendo ajustar los requisitos y mejorar el modelo de aprendizaje del sistema.
+\end{itemize}
+
+% ===========================
+\section{Cronograma del Proyecto (17 semanas)}
+\begin{longtable}{|p{10cm}|p{5cm}|}
+\hline
+\textbf{Actividad} & \textbf{Periodo de Ejecución} \\ \hline
+Organización del equipo y planificación inicial & 10 de noviembre -- 23 de noviembre \\ \hline
+Elicitación de requisitos (entrevistas, observación y análisis del contexto) & 24 de noviembre -- 14 de diciembre \\ \hline
+Modelado del sistema (casos de uso, actores y escenarios viales) & 15 de diciembre -- 4 de enero \\ \hline
+Especificación de requisitos funcionales y no funcionales & 5 de enero -- 25 de enero \\ \hline
+Validación y revisión interna de requisitos & 26 de enero -- 8 de febrero \\ \hline
+Redacción del documento final de requisitos y plan de proyecto & 9 de febrero -- 22 de febrero \\ \hline
+Preparación de presentación y revisión final del documento & 23 de febrero -- 1 de marzo \\ \hline
+Entrega y exposición de resultados documentales & 2 de marzo -- 8 de marzo \\ \hline
+\end{longtable}
+
+% ===========================
+\section{Roles y Responsabilidades del Equipo}
+
+El equipo del proyecto se organiza de forma colaborativa, donde cada integrante asume funciones específicas según las fases del proceso de ingeniería de requisitos y diseño del sistema. Todos los miembros participan activamente en la recopilación, análisis, documentación y modelado de los requisitos.
+
+\subsection{Líder del Proyecto}
+\begin{itemize}
+    \item \textbf{Panamá Murillo Moisés Antonio:} Responsable de la coordinación general del equipo, planificación de actividades y seguimiento del cumplimiento de los objetivos. Supervisa la integración entre las distintas fases del proyecto y garantiza la coherencia metodológica y técnica de la documentación generada.
+\end{itemize}
+
+\subsection{Análisis y Documentación de Requisitos}
+\begin{itemize}
+    \item \textbf{Equipo completo (todos los integrantes):} Fase colaborativa enfocada en la identificación, análisis y especificación de los requisitos funcionales y no funcionales del sistema. Incluye la elaboración de documentos técnicos, entrevistas con actores, creación de diagramas de casos de uso y validación de la información recopilada.
+\end{itemize}
+
+\subsection{Diseño del Sistema}
+\begin{itemize}
+    \item \textbf{Panamá Murillo Moisés Antonio, Vera Sánchez Charly Daniel y Zamora Bumbila Diego Alexander:} Encargados del diseño conceptual y técnico del simulador. Diseñan los modelos del sistema, diagramas UML, estructuras de interacción y representaciones visuales de la interfaz. Se busca asegurar que el diseño propuesto refleje con precisión los requisitos levantados y pueda servir como base para una futura implementación.
+\end{itemize}
+
+\subsection{Control de Calidad}
+\begin{itemize}
+    \item \textbf{Zamora Bumbila Diego Alexander:} Responsable de la revisión y validación de los entregables producidos en cada fase. Evalúa la coherencia entre los requisitos, la documentación y los modelos diseñados, asegurando la calidad técnica, metodológica y formal del proyecto.
+\end{itemize}
+
+% ===========================
+\section{Reglas de Trabajo y Mecanismos de Control}
+Para asegurar el cumplimiento del cronograma establecido y la calidad del proyecto durante el periodo comprendido entre el \textbf{10 de noviembre y el 8 de marzo}, se aplicarán las siguientes reglas de trabajo y mecanismos de control:
+
+\begin{itemize}
+    \item Realización de reuniones semanales de seguimiento y revisión, programadas dentro de cada periodo de trabajo definido en el cronograma.
+    \item Uso permanente de repositorios digitales para el control de versiones, respaldo de la información y trazabilidad de los cambios realizados.
+    \item Ejecución de validaciones internas al finalizar cada fase del cronograma, antes de avanzar al siguiente periodo de ejecución.
+    \item Registro continuo de avances, tareas completadas y pendientes en un tablero digital, actualizado semanalmente conforme al progreso del proyecto.
+\end{itemize}
+
+% ===========================
+\section{Entorno Colaborativo}
+Durante el diseño del proyecto, a lo largo del periodo comprendido entre el \textbf{10 de noviembre y el 8 de marzo}, el equipo utilizará las siguientes herramientas colaborativas para garantizar una comunicación efectiva, organización del trabajo y control del progreso:
+
+\begin{itemize}
+    \item \textbf{Google Drive:} Almacenamiento, edición colaborativa y respaldo de documentos generados en cada fase del proyecto (\href{https://drive.google.com/drive/folders/1wIwta_jG9tcqN2zeTE8UvTDvzfB7c_vB?usp=drive_link}{Enlace a carpeta}).
+    \item \textbf{GitHub:} Gestión del control de versiones del código fuente y registro de cambios durante las etapas de implementación (\href{https://github.com/dzamorab2-cloud/Proyecto-Grupal-Ingenieria-de-Requerimiento.git}{Repositorio del proyecto}).
+    \item \textbf{WhatsApp:} Comunicación rápida para coordinación diaria y resolución de incidencias operativas.
+    \item \textbf{Discord:} Realización de reuniones virtuales semanales y sesiones de revisión del avance del proyecto.
+    \item \textbf{Figma:} Diseño colaborativo de interfaces del simulador durante las fases de modelado y diseño.
+\end{itemize}
+
+% ===========================
+\section{Referencias}
+\printbibliography
+
+% ===========================
+\section*{Anexos}
+
+\subsection*{Anexo 1: Organización del Equipo}
+Distribución de funciones y responsabilidades con enfoque en trabajo colaborativo.
+
+\subsection*{Anexo 2: Definición del Proyecto y Alcance Inicial}
+El sistema abordará la educación vial mediante simulación y retroalimentación inteligente, priorizando usuarios jóvenes o en formación.
+
+\subsection*{Anexo 3: Actores Clave}
+Usuarios, instructores y administradores del sistema interactuarán mediante roles definidos para facilitar el aprendizaje y control del sistema.
+
+\subsection*{Anexo 4: Metodología Elegida}
+Se aplicará un enfoque iterativo con retroalimentación continua para lograr un producto funcional y educativo.
+
+\subsection*{Anexo 5: Distribución de Actividades}
+Las tareas estarán calendarizadas semanalmente en el tablero de control compartido.
+
+\subsection*{Anexo 6: Entorno de Trabajo}
+Se implementarán herramientas colaborativas para asegurar trazabilidad, control y comunicación efectiva.
+
+\end{document}
