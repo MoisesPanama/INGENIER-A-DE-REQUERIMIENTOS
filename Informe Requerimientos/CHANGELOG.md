@@ -5,7 +5,7 @@
 - Corregidas referencias bibliográficas
 - Actualizado diagrama de clases
 
-## v2.0 – Diciembre 2025
+## v2.0 – 03/03/2026 2025
 - 
 - 
 - 
