@@ -1,14 +1,17 @@
 # Registro de Cambios – Informe de Requerimientos
 
-## v1.0 – 03/03/2026
+## v0.0 – Diciembre 2025
+- Entrega de planificación del pryecto final
+
+## v1.0 – Enero 2026
+- Entrega parcial inicial
+- Impplementación
+
+## v2.0 – Febrero 2026
 - Entrega parcial inicial
 - Corregidas referencias bibliográficas
 - Actualizado diagrama de clases
-
-## v2.0 – 03/03/2026 2025
-- 
-- 
-- 
+- Actualizado escenarios
 ```
 
 ---
