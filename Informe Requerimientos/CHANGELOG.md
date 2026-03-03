@@ -24,4 +24,3 @@
 
 **Paso 4:** Commit con mensaje descriptivo:
 ```
-docs: agrega versión 2.0 con sección de validación y pruebas
