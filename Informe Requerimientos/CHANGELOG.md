@@ -17,6 +17,18 @@
 - Actualizado escenarios
 - Actualizado requisitos funcionales
 - Actualizado requisitos no funcionales
+
+## v3.0 – Marzo 2026
+- Entrega parcial
+- Corregidas tablas de casos de uso
+- Corregidas imagenes
+- Actualizado diagrama de casos de uso
+- Implementado diagrama de actividad
+- Implementado diagrama de secuencia
+- Implementado diagrama de relacional
+- Implementado imagenes de prototipo baja fidelidad
+- Implementado diagrama de prototipo de alta fidelidad
+- Implementado link de repositorio de proyecto
 ```
 
 ---
